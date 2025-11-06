@@ -1,0 +1,29 @@
+# Gradle Files
+.gradle/
+**/build/
+**/bin/
+.kotlin/
+
+# IDE files
+.idea/
+*.iml
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Local configuration
+local.properties
+
+# Log files
+*.log
+captures/
+
+# Keystore files
+*.jks
+*.keystore
+
+# Generated files
+**/generated/
