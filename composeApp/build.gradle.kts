@@ -14,6 +14,8 @@ plugins {
     alias(libs.plugins.composeCompiler)
     // Compose Hot Reload：开发期快速预览 / 热更新支持。
     alias(libs.plugins.composeHotReload)
+    // Kotlinx Serialization：生成跨平台序列化代码（Decompose 配置保存需要）。
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -72,6 +74,9 @@ kotlin {
             implementation(compose.components.uiToolingPreview) // KMP 预览工具支持。
             implementation(libs.androidx.lifecycle.viewmodelCompose) // ViewModel in Compose。
             implementation(libs.androidx.lifecycle.runtimeCompose) // Lifecycle 感知能力。
+            implementation("com.arkivanov.decompose:decompose:3.3.0") // 多平台导航核心。
+            implementation("com.arkivanov.decompose:extensions-compose:3.3.0") // Compose 集成辅助。
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.6.3") // Decompose 3.x 使用 kotlinx.serialization 保存配置。
             implementation(projects.shared) // 引入共享业务逻辑模块。
         }
         // 公共测试依赖：提供 Kotlin/Multiplatform 单元测试能力。
