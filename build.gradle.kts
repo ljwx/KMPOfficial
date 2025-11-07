@@ -16,4 +16,5 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform) apply false
     // Ktor 插件：供 server 模块使用的 Web 框架插件。
     alias(libs.plugins.ktor) apply false
+    alias(libs.plugins.androidKotlinMultiplatformLibrary) apply false
 }

@@ -1,6 +1,7 @@
 package org.example.project
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,30 +11,38 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinproject.composeapp.generated.resources.Res
 import kotlinproject.composeapp.generated.resources.compose_multiplatform
+import kotlinx.coroutines.launch
 import org.example.project.commoncomposable.CommonTopBar
 import org.example.project.navigation.AppNavigation.State.ScreenState
 import org.example.project.navigation.rememberAppNavigation
@@ -88,41 +97,71 @@ private fun HomeContainer(
 ) {
     val topBarTitle = selectedTab.label
 
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            CommonTopBar(
-                title = topBarTitle,
-                onBack = null
-            )
-        },
-        bottomBar = {
-            NavigationBar {
-                BottomTab.values().forEach { tab ->
-                    NavigationBarItem(
-                        selected = selectedTab == tab,
-                        onClick = { onTabSelected(tab) },
-                        icon = { Icon(tab.icon, contentDescription = tab.label) },
-                        label = { Text(tab.label) }
-                    )
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+    ModalNavigationDrawer(drawerContent = {
+        ModalDrawerSheet(modifier = Modifier.width(100.dp).pointerInput(Unit) {
+            detectHorizontalDragGestures { change, dragAmount ->
+
+                if (dragAmount > 0) {
+                    change.consume()
+                    scope.launch { drawerState.close() }
                 }
             }
+        }) {
+            Text("按钮")
         }
-    ) { innerPadding ->
-        val contentModifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding)
+    }, drawerState = drawerState, gesturesEnabled = false) {
 
-        when (selectedTab) {
-            BottomTab.Home -> HomeScreen(
-                tabTitle = selectedTab.label,
-                modifier = contentModifier,
-                onNavigateDetail = onOpenDetail
-            )
+        Box(Modifier.fillMaxSize().pointerInput(Unit) {
+            detectHorizontalDragGestures(onDragStart = { offset ->
+                val edgeWidthPx = 60.dp.toPx()
+                if (offset.x > edgeWidthPx) {
+                    return@detectHorizontalDragGestures
+                }
+                scope.launch { drawerState.open() }
+            }, onHorizontalDrag = { _, _ ->
 
-            BottomTab.Profile -> ProfileScreen(modifier = contentModifier)
+            })
+        }) {
+            Scaffold(
+                modifier = modifier,
+                topBar = {
+                    CommonTopBar(
+                        title = topBarTitle,
+                        onBack = null
+                    )
+                },
+                bottomBar = {
+                    NavigationBar {
+                        BottomTab.values().forEach { tab ->
+                            NavigationBarItem(
+                                selected = selectedTab == tab,
+                                onClick = { onTabSelected(tab) },
+                                icon = { Icon(tab.icon, contentDescription = tab.label) },
+                                label = { Text(tab.label) }
+                            )
+                        }
+                    }
+                }
+            ) { innerPadding ->
+                val contentModifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
 
-            BottomTab.Settings -> SettingsScreen(modifier = contentModifier)
+                when (selectedTab) {
+                    BottomTab.Home -> HomeScreen(
+                        tabTitle = selectedTab.label,
+                        modifier = contentModifier,
+                        onNavigateDetail = onOpenDetail
+                    )
+
+                    BottomTab.Profile -> ProfileScreen(modifier = contentModifier)
+
+                    BottomTab.Settings -> SettingsScreen(modifier = contentModifier)
+                }
+            }
         }
     }
 }
