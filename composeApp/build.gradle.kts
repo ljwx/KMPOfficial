@@ -78,6 +78,7 @@ kotlin {
             implementation("com.arkivanov.decompose:extensions-compose:3.3.0") // Compose 集成辅助。
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.6.3") // Decompose 3.x 使用 kotlinx.serialization 保存配置。
             implementation(projects.shared) // 引入共享业务逻辑模块。
+            implementation(project(":kmplog")) // 引入 KMP 日志模块。
         }
         // 公共测试依赖：提供 Kotlin/Multiplatform 单元测试能力。
         commonTest.dependencies {
