@@ -1,3 +1,6 @@
+// 为 wasm 目标启用实验性 DSL。
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidKotlinMultiplatformLibrary)
@@ -40,15 +43,21 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = xcfName
         }
-        iosTarget.compilations.getByName("main") {
-            cinterops {
-                val os by creating {
-                    defFile(file("src/iosMain/cinterop/os.def"))
-                    packageName = "platform.os.log"
-                    compilerOpts("-fmodules")
-                }
-            }
-        }
+    }
+
+    // JVM 桌面/服务器环境的实现，供 Compose Desktop 等调用。
+    jvm()
+
+    // JS 目标：在浏览器与 Node 端复用日志模块。
+    js {
+        browser() // 浏览器端（Compose Web）
+        nodejs()  // Node.js 端（工具/脚本）
+    }
+
+    // WASM 目标仍处于实验阶段，需显式 Opt-in。
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        browser() // Compose WASM 浏览器端
     }
 
 // Source set declarations.

@@ -104,7 +104,7 @@ private fun HomeContainer(
         ModalDrawerSheet(modifier = Modifier.width(100.dp).pointerInput(Unit) {
             detectHorizontalDragGestures { change, dragAmount ->
 
-                if (dragAmount > 0) {
+                if (dragAmount < 0) {
                     change.consume()
                     scope.launch { drawerState.close() }
                 }
