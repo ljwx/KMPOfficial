@@ -5,7 +5,7 @@ import com.jdcr.kmplog.base.LogLevel
 
 actual fun platform() = "Android"
 
-internal actual fun performLog(level: LogLevel, tag: String, message: String) {
+internal actual fun performLog(time: String, level: LogLevel, tag: String, message: String) {
     when (level) {
         LogLevel.DEBUG -> Log.d(tag, message)
         LogLevel.INFO -> Log.i(tag, message)
@@ -13,5 +13,3 @@ internal actual fun performLog(level: LogLevel, tag: String, message: String) {
         LogLevel.ERROR -> Log.e(tag, message)
     }
 }
-
-internal actual fun currentTimeMillis(): Long = System.currentTimeMillis()

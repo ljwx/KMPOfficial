@@ -37,6 +37,9 @@ kotlin {
             baseName = "ComposeApp"
             // 静态库便于在 Xcode 中直接链接，无需额外 runtime。
             isStatic = true
+            export(projects.shared)// 将 shared 模块的 API 暴露给 iOS
+            export(projects.kmplog)// 将 kmplog 模块的 API 暴露给 iOS
+            export(libs.kotlinx.datetime)// 显式导出 kmplog 的传递依赖（KMP export 不会自动传递）
         }
     }
 
@@ -77,8 +80,8 @@ kotlin {
             implementation("com.arkivanov.decompose:decompose:3.3.0") // 多平台导航核心。
             implementation("com.arkivanov.decompose:extensions-compose:3.3.0") // Compose 集成辅助。
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.6.3") // Decompose 3.x 使用 kotlinx.serialization 保存配置。
-            implementation(projects.shared) // 引入共享业务逻辑模块。
-            implementation(project(":kmplog")) // 引入 KMP 日志模块。
+            api(projects.shared) // 引入共享业务逻辑模块，导出给 iOS Framework 使用。
+            api(projects.kmplog) // 导出跨平台日志模块，确保 Clock.System 打包进 iOS Framework。
         }
         // 公共测试依赖：提供 Kotlin/Multiplatform 单元测试能力。
         commonTest.dependencies {

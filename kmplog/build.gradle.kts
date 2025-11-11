@@ -32,6 +32,16 @@ kotlin {
 // https://developer.android.com/kotlin/multiplatform/migrate
     val xcfName = "kmplogKit"
 
+    jvm()
+
+    js {
+        browser()
+    }
+
+    wasmJs {
+        browser()
+    }
+
     listOf(
         iosX64(),
         iosArm64(),
@@ -39,16 +49,20 @@ kotlin {
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
             baseName = xcfName
+            export(libs.kotlinx.datetime)
         }
-        iosTarget.compilations.getByName("main") {
-            cinterops {
-                val os by creating {
-                    defFile(file("src/iosMain/cinterop/os.def"))
-                    packageName = "platform.os.log"
-                    compilerOpts("-fmodules")
-                }
-            }
-        }
+
+        // ============================================================================
+        // Foundation Framework C Interop 配置
+        // ============================================================================
+//        iosTarget.compilations.getByName("main") {
+//            cinterops {
+//                val foundation by creating {
+//                    defFile(file("src/iosMain/cinterop/foundation.def"))
+//                    packageName = "platform.foundation"
+//                }
+//            }
+//        }
     }
 
 // Source set declarations.
@@ -60,6 +74,7 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(libs.kotlin.stdlib)
+                api(libs.kotlinx.datetime)
                 // Add KMP dependencies here
             }
         }

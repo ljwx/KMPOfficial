@@ -4,6 +4,8 @@ import com.jdcr.kmplog.base.LogConfig
 import com.jdcr.kmplog.base.LogContent
 import com.jdcr.kmplog.base.LogLevel
 import kotlin.concurrent.Volatile
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 object KLog {
     @Volatile
@@ -13,6 +15,7 @@ object KLog {
         this.config = config
     }
 
+    @OptIn(ExperimentalTime::class)
     internal fun emit(
         level: LogLevel,
         tag: String,
@@ -24,7 +27,7 @@ object KLog {
         if (cfg.miniLevel.priority > level.priority) return
 
         val record = LogContent(
-            timestampMillis = currentTimeMillis(),
+            timestampMillis = Clock.System.now().toEpochMilliseconds(),
             level = level,
             tag = tag,
             message = message,

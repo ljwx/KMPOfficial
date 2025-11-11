@@ -34,6 +34,7 @@ kotlin {
         // 公共源集：放置跨平台共享逻辑，可在此继续添加通用依赖。
         commonMain.dependencies {
             // 例如添加 kotlinx.coroutines、kotlinx.serialization 等库放在这里。
+            api(projects.kmplog)
         }
         // 公共测试源集：为 Shared 模块提供平台无关的单元测试能力。
         commonTest.dependencies {

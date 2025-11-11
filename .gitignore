@@ -6,6 +6,7 @@
 
 # IDE files
 .idea/
+.cursor/
 *.iml
 .DS_Store
 *.suo
@@ -27,3 +28,7 @@ captures/
 
 # Generated files
 **/generated/
+
+# Xcode
+**/xcuserdata/
+**/project.xcworkspace/contents.xcworkspacedata

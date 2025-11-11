@@ -2,7 +2,7 @@ package com.jdcr.kmplog
 
 import com.jdcr.kmplog.base.LogLevel
 
-actual fun platform() = "iOS"
+actual fun platform() = "WasmJs"
 
 internal actual fun performLog(time: String, level: LogLevel, tag: String, message: String) {
     val prefix = when (level) {

@@ -2,7 +2,7 @@ package com.jdcr.kmplog
 
 import com.jdcr.kmplog.base.LogLevel
 
-actual fun platform() = "iOS"
+actual fun platform() = "JVM"
 
 internal actual fun performLog(time: String, level: LogLevel, tag: String, message: String) {
     val prefix = when (level) {
@@ -13,3 +13,4 @@ internal actual fun performLog(time: String, level: LogLevel, tag: String, messa
     }
     println("[$time] $prefix/$tag: $message")
 }
+

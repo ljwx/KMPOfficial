@@ -40,10 +40,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.jdcr.kmplog.KLog
 import kotlinproject.composeapp.generated.resources.Res
 import kotlinproject.composeapp.generated.resources.compose_multiplatform
 import kotlinx.coroutines.launch
 import org.example.project.commoncomposable.CommonTopBar
+import org.example.project.log.ConstLogTag
 import org.example.project.navigation.AppNavigation.State.ScreenState
 import org.example.project.navigation.rememberAppNavigation
 import org.jetbrains.compose.resources.painterResource
@@ -59,6 +61,7 @@ private enum class BottomTab(val label: String, val icon: ImageVector) {
 @Composable
 @Preview
 fun App() {
+    KLog.d(ConstLogTag.UI_INFO, "启动")
     MaterialTheme {
         // 创建跨平台可复用的导航控制器（内部基于 Decompose 实现）
         val navigation = rememberAppNavigation()
@@ -103,8 +106,8 @@ private fun HomeContainer(
     ModalNavigationDrawer(drawerContent = {
         ModalDrawerSheet(modifier = Modifier.width(100.dp).pointerInput(Unit) {
             detectHorizontalDragGestures { change, dragAmount ->
-
-                if (dragAmount > 0) {
+                KLog.d(ConstLogTag.UI_INFO, "dragAmount: $dragAmount")
+                if (dragAmount < 0) {
                     change.consume()
                     scope.launch { drawerState.close() }
                 }
