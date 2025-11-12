@@ -44,8 +44,10 @@ Desktop 应用本质上是一个标准的桌面 Java/Kotlin 应用程序。Gradl
 2.  **执行 Gradle 任务**：
     在项目根目录下，输入并执行以下命令：
     ```bash
-    ./gradlew :composeApp:jvmRun
+    ./gradlew :composeApp:run
     ```
+    
+    **注意**：正确的任务名称是 `run`，不是 `jvmRun`。Compose Desktop 插件会自动识别 JVM 目标并运行桌面应用。
 
 3.  **查看结果**：
     终端会开始执行 Gradle 任务。当构建完成后，您会看到一个独立的桌面窗口弹出。

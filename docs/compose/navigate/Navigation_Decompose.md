@@ -110,7 +110,149 @@ fun onBackPressed() {
 
 ---
 
-### 7. 组合业务组件
+### 7. 页面结果返回（类似 startActivityForResult）
+
+在 Android 开发中，`startActivityForResult` 用于打开页面并接收返回结果。在 Decompose 中，我们提供了类似的功能：`openScreenForResult` 和 `navigateBackWithResult`。
+
+#### 7.1 打开页面并等待结果
+
+使用 `openScreenForResult` 打开页面，并注册结果回调：
+
+```kotlin
+// 方式1：使用序列化参数
+@Serializable
+data class SelectProductParams(val categoryId: String)
+
+@Serializable
+data class SelectedProductResult(val productId: String, val productName: String)
+
+val navigation = LocalAppNavigation.current
+
+// 打开选择商品页面，等待返回结果
+navigation.openScreenForResult<SelectProductParams, SelectedProductResult>(
+    router = PRODUCT_SELECT,
+    params = SelectProductParams(categoryId = "123"),
+    onResult = { result ->
+        // 处理返回的结果
+        println("选中的商品: ${result.productName}")
+        // 更新UI或执行其他操作
+    }
+)
+
+// 方式2：使用 Map 参数
+navigation.openScreenForResult<SelectedProductResult>(
+    router = PRODUCT_SELECT,
+    params = mapOf("categoryId" to "123"),
+    onResult = { result ->
+        println("选中的商品: ${result.productName}")
+    }
+)
+```
+
+#### 7.2 返回结果
+
+在目标页面中，使用 `navigateBackWithResult` 返回结果并关闭页面：
+
+```kotlin
+@Composable
+fun ProductSelectScreen() {
+    val navigation = LocalAppNavigation.current
+    
+    Button(onClick = {
+        // 返回选中的商品信息
+        navigation.navigateBackWithResult(
+            SelectedProductResult(
+                productId = "456",
+                productName = "iPhone 15"
+            )
+        )
+    }) {
+        Text("选择商品")
+    }
+    
+    // 或者取消选择，直接返回
+    Button(onClick = {
+        navigation.navigateBack() // 不返回结果，直接返回
+    }) {
+        Text("取消")
+    }
+}
+```
+
+#### 7.3 工作原理
+
+1. **请求 ID 生成**：调用 `openScreenForResult` 时，系统会生成唯一的 `requestId` 并存储在 `ScreenRouterData` 中
+2. **回调注册**：回调函数存储在 `resultCallbacks` Map 中，以 `requestId` 为键
+3. **结果返回**：调用 `navigateBackWithResult` 时，系统会：
+   - 从当前页面的 `ScreenRouterData` 中获取 `requestId`
+   - 查找对应的回调函数并执行
+   - 清理回调函数
+   - 执行 `navigation.pop()` 返回上一页
+
+#### 7.4 注意事项
+
+- **类型安全**：使用序列化参数时，确保结果类型 `R` 是可序列化的（标记 `@Serializable`）
+- **回调清理**：回调函数会在结果返回后自动清理，无需手动管理
+- **取消场景**：如果用户直接按返回键（不调用 `navigateBackWithResult`），回调不会被触发
+- **生命周期**：回调函数会在 `AppNavigation` 销毁时自动清理
+
+#### 7.5 完整示例
+
+```kotlin
+// 定义参数和结果类型
+@Serializable
+data class EditUserParams(val userId: String)
+
+@Serializable
+data class EditUserResult(val success: Boolean, val updatedName: String)
+
+// 打开编辑页面
+fun openEditUserScreen(userId: String) {
+    val navigation = LocalAppNavigation.current
+    navigation.openScreenForResult<EditUserParams, EditUserResult>(
+        router = USER_EDIT,
+        params = EditUserParams(userId = userId),
+        onResult = { result ->
+            if (result.success) {
+                // 更新用户列表
+                refreshUserList()
+                showToast("用户 ${result.updatedName} 已更新")
+            }
+        }
+    )
+}
+
+// 编辑页面返回结果
+@Composable
+fun EditUserScreen() {
+    val navigation = LocalAppNavigation.current
+    
+    var userName by remember { mutableStateOf("") }
+    
+    Column {
+        TextField(
+            value = userName,
+            onValueChange = { userName = it }
+        )
+        
+        Button(onClick = {
+            // 保存并返回结果
+            navigation.navigateBackWithResult(
+                EditUserResult(
+                    success = true,
+                    updatedName = userName
+                )
+            )
+        }) {
+            Text("保存")
+        }
+    }
+}
+```
+
+---
+
+### 8. 组合业务组件
 
 在更完整的架构中，可为每个界面封装 `Component`：
 
@@ -135,7 +277,7 @@ class RootComponent(componentContext: ComponentContext) : ComponentContext by co
 
 ---
 
-### 8. 生命周期与状态保存
+### 9. 生命周期与状态保存
 
 - `ComponentContext` 自动提供 `Lifecycle`；可在 Android Activity/Fragment 或 Desktop Window 中使用 `LifecycleController` 绑定。  
 - Decompose 默认使用 `StateKeeper` 保存序列化数据，配合 `serializer` 自动恢复。  
@@ -143,7 +285,7 @@ class RootComponent(componentContext: ComponentContext) : ComponentContext by co
 
 ---
 
-### 9. 与其他技术对比
+### 10. 与其他技术对比
 
 | 特性 | Decompose | Voyager | Precompose |
 | --- | --- | --- | --- |
@@ -157,7 +299,7 @@ class RootComponent(componentContext: ComponentContext) : ComponentContext by co
 
 ---
 
-### 10. 下一步建议
+### 11. 下一步建议
 
 1. 跟随官方文档完成 [Hello World 示例](https://arkivanov.github.io/Decompose/quick-start/)。  
 2. 熟悉 `Component` 抽象与多子导航模式（`ChildSlot`、`ChildPages`）。  

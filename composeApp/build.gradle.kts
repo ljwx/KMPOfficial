@@ -77,9 +77,10 @@ kotlin {
             implementation(compose.components.uiToolingPreview) // KMP 预览工具支持。
             implementation(libs.androidx.lifecycle.viewmodelCompose) // ViewModel in Compose。
             implementation(libs.androidx.lifecycle.runtimeCompose) // Lifecycle 感知能力。
-            implementation("com.arkivanov.decompose:decompose:3.3.0") // 多平台导航核心。
-            implementation("com.arkivanov.decompose:extensions-compose:3.3.0") // Compose 集成辅助。
+            implementation("com.arkivanov.decompose:decompose:3.4.0") // 多平台导航核心。
+            implementation("com.arkivanov.decompose:extensions-compose:3.4.0") // Compose 集成辅助。
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.6.3") // Decompose 3.x 使用 kotlinx.serialization 保存配置。
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3") // JSON 序列化支持
             api(projects.shared) // 引入共享业务逻辑模块，导出给 iOS Framework 使用。
             api(projects.kmplog) // 导出跨平台日志模块，确保 Clock.System 打包进 iOS Framework。
         }

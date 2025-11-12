@@ -6,4 +6,6 @@ object ConstLogTag {
 
     val UI_INFO = PREFIX + "ui_info"
 
+    val ROUTER = PREFIX + "router"
+
 }
