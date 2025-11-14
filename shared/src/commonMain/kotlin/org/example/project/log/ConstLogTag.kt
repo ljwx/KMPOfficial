@@ -8,4 +8,6 @@ object ConstLogTag {
 
     val ROUTER = PREFIX + "router"
 
+    val NETWORK = PREFIX + "ntwk"
+
 }

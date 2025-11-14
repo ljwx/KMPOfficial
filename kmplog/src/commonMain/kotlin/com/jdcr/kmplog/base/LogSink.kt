@@ -20,11 +20,10 @@ object ConsoleLogSink : LogSink {
         val timeString = localDateTime.toString()
             .replace('T', ' ')
             .substringBefore('.') + ".${(content.timestampMillis % 1000).toString().padStart(3, '0')}"
-
         val fullMessage = buildString {
             append(content.message)
-            content.context?.let { append(", $it") }
-            content.throwable?.let { "\n${it.stackTraceToString()}" }
+            append(content.context?.let { append(", $it") })
+            append(content.throwable?.let { "\n${it.stackTraceToString()}" })
         }
         performLog(timeString, content.level, content.tag, fullMessage)
     }

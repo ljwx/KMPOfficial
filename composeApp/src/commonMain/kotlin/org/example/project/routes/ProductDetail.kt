@@ -2,7 +2,6 @@ package org.example.project.routes
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import org.example.project.home.Product
 import org.example.project.navigation.PRODUCT_DETAIL
 import org.example.project.navigation.ScreenRouteHandler
 import org.example.project.navigation.ScreenRouterData

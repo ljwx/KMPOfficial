@@ -4,6 +4,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 // 插件声明：Shared 模块作为 KMP Library，需要 KMP 能力 + Android 库发布能力。
 plugins {
     alias(libs.plugins.kotlinMultiplatform) // 启用 Kotlin Multiplatform，输出多个平台的共享代码。
+    alias(libs.plugins.kotlinSerialization) // 启用 Kotlin 序列化支持
     alias(libs.plugins.androidLibrary) // 以 Android Library 形式编译，供 app 模块依赖。
 }
 
@@ -41,6 +42,13 @@ kotlin {
         commonMain.dependencies {
             // 例如添加 kotlinx.coroutines、kotlinx.serialization 等库放在这里。
             api(projects.kmplog)
+            // Ktor Client 核心
+            implementation(libs.ktor.client.core)
+            // 内容协商和 JSON 序列化
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
+            // 日志支持（可选）
+            implementation(libs.ktor.client.logging)
         }
         // 公共测试源集：为 Shared 模块提供平台无关的单元测试能力。
         commonTest.dependencies {
@@ -54,6 +62,19 @@ kotlin {
             compileOnly("org.openjfx:javafx-controls:17.0.2")
             compileOnly("org.openjfx:javafx-web:17.0.2")
             compileOnly("org.openjfx:javafx-graphics:17.0.2")
+            implementation(libs.ktor.client.cio)
+        }
+        androidMain.dependencies {
+            implementation(libs.ktor.client.android)
+        }
+        iosMain.dependencies {
+            implementation(libs.ktor.client.ios)
+        }
+        jsMain.dependencies {
+            implementation(libs.ktor.client.js)
+        }
+        wasmJsMain.dependencies {
+            implementation(libs.ktor.client.curl)
         }
     }
 }

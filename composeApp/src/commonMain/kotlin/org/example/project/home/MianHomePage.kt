@@ -13,38 +13,33 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinproject.composeapp.generated.resources.Res
 import kotlinproject.composeapp.generated.resources.compose_multiplatform
-import kotlinx.serialization.Serializable
+import kotlinx.coroutines.launch
 import org.example.project.Greeting
 import org.example.project.PlatformType
 import org.example.project.getPlatform
 import org.example.project.log.KSLog
 import org.example.project.navigation.LocalAppNavigation
 import org.example.project.navigation.PRODUCT_DETAIL
-import org.example.project.navigation.openScreen
+import org.example.project.network.api.ProductApiService
+import org.example.project.network.model.ProductSummaryData
 import org.jetbrains.compose.resources.painterResource
-
-// 示例数据类：商品信息
-@Serializable
-data class Product(
-    val id: Int,
-    val name: String,
-    val price: Double,
-    val description: String
-)
 
 @Composable
 fun HomeScreen(
@@ -53,15 +48,18 @@ fun HomeScreen(
 ) {
     val greeting = remember { Greeting().greet() }
     val navigation = LocalAppNavigation.current
+    
+    var products by remember { mutableStateOf(emptyList<ProductSummaryData>()) }
+    val apiService = remember { ProductApiService() }
+    val scope = rememberCoroutineScope()
+    LaunchedEffect(Unit) {
+        scope.launch { 
+            apiService.getProducts().onSuccess { 
+                products = it
+            }.onFailure { 
 
-    // 模拟商品列表数据（实际项目中可能来自 ViewModel 或数据源）
-    val products = remember {
-        listOf(
-            Product(1, "商品A", 99.99, "这是商品A的描述"),
-            Product(2, "商品B", 199.99, "这是商品B的描述"),
-            Product(3, "商品C", 299.99, "这是商品C的描述"),
-            Product(4, "商品D", 399.99, "这是商品D的描述"),
-        )
+            }
+        }
     }
 
     Column(
@@ -112,10 +110,10 @@ fun HomeScreen(
                     ProductItem(
                         product = product,
                         onClick = {
-                            navigation.openScreenForResult<Product, String>(
+                            navigation.openScreenForResult<ProductSummaryData, String>(
                                 router = PRODUCT_DETAIL,
                                 params = product,
-                                serializer = Product.serializer(),
+                                serializer = ProductSummaryData.serializer(),
                                 onResult = {
                                     KSLog.iRouter("跳转页面后返回的结果:$it")
                                 }
@@ -130,7 +128,7 @@ fun HomeScreen(
 
 @Composable
 private fun ProductItem(
-    product: Product,
+    product: ProductSummaryData,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {

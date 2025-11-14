@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.example.project.commoncomposable.CommonTopBarBack
-import org.example.project.home.Product
+import org.example.project.network.model.ProductSummaryData
 import org.example.project.navigation.LocalAppNavigation
 import org.example.project.navigation.BackHandler
 import org.example.project.navigation.WEBVIEW_TEST
@@ -28,7 +28,7 @@ fun DetailScreen(
 ) {
     val navigation = LocalAppNavigation.current
 
-    val product = navigation.getCurrentActiveInstance().getParamsSerialize<Product>()
+    val product = navigation.getCurrentActiveInstance().getParamsSerialize<ProductSummaryData>()
 
     MaterialTheme {
         Scaffold(topBar = { CommonTopBarBack("详情页", null) }) {

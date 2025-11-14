@@ -16,4 +16,16 @@ object KSLog {
         KLog.e(ConstLogTag.ROUTER, content, throwable)
     }
 
+    fun iNet(content: String, throwable: Throwable? = null) {
+        KLog.i(ConstLogTag.NETWORK, content, throwable)
+    }
+
+    fun wNet(content: String, throwable: Throwable? = null) {
+        KLog.w(ConstLogTag.NETWORK, content, throwable)
+    }
+
+    fun eNet(content: String, throwable: Throwable?) {
+        KLog.e(ConstLogTag.NETWORK, content, throwable)
+    }
+
 }

@@ -34,7 +34,6 @@ object KLog {
             throwable = throwable,
             context = context
         )
-
         cfg.sinks.forEach { sink ->
             runCatching {
                 sink.write(record)
@@ -49,7 +48,7 @@ object KLog {
         throwable: Throwable? = null,
         context: Map<String, Any?>? = null
     ) {
-        emit(LogLevel.DEBUG, tag, message)
+        emit(LogLevel.DEBUG, tag, message, throwable, context)
     }
 
     fun i(
@@ -58,7 +57,7 @@ object KLog {
         throwable: Throwable? = null,
         context: Map<String, Any?>? = null
     ) {
-        emit(LogLevel.INFO, tag, message)
+        emit(LogLevel.INFO, tag, message, throwable, context)
     }
 
     fun w(
@@ -67,7 +66,7 @@ object KLog {
         throwable: Throwable? = null,
         context: Map<String, Any?>? = null
     ) {
-        emit(LogLevel.WARN, tag, message)
+        emit(LogLevel.WARN, tag, message, throwable, context)
     }
 
     fun e(
@@ -76,7 +75,7 @@ object KLog {
         throwable: Throwable? = null,
         context: Map<String, Any?>? = null
     ) {
-        emit(LogLevel.ERROR, tag, message)
+        emit(LogLevel.ERROR, tag, message, throwable, context)
     }
 
 }
