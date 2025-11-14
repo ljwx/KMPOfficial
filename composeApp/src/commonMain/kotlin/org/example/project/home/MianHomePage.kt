@@ -3,6 +3,7 @@ package org.example.project.home
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
@@ -27,6 +29,8 @@ import kotlinproject.composeapp.generated.resources.Res
 import kotlinproject.composeapp.generated.resources.compose_multiplatform
 import kotlinx.serialization.Serializable
 import org.example.project.Greeting
+import org.example.project.PlatformType
+import org.example.project.getPlatform
 import org.example.project.log.KSLog
 import org.example.project.navigation.LocalAppNavigation
 import org.example.project.navigation.PRODUCT_DETAIL
@@ -83,29 +87,42 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 商品列表
-        LazyColumn(
+        // 商品列表 - 根据平台设置不同的宽度
+        val isWeb = getPlatform().isPlatform(PlatformType.PLATFORM_WEB)
+        Box(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                horizontal = 16.dp,
-                vertical = 8.dp
-            )
+            contentAlignment = if (isWeb) Alignment.Center else Alignment.TopStart
         ) {
-            items(products) { product ->
-                ProductItem(
-                    product = product,
-                    onClick = {
-                        navigation.openScreenForResult<Product, String>(
-                            router = PRODUCT_DETAIL,
-                            params = product,
-                            serializer = Product.serializer(),
-                            onResult = {
-                                KSLog.iRouter("跳转页面后返回的结果:$it")
-                            }
-                        )
-                    }
+            LazyColumn(
+                modifier = Modifier
+                    .then(
+                        if (isWeb) {
+                            Modifier.fillMaxWidth(0.5f)
+                        } else {
+                            Modifier.fillMaxWidth()
+                        }
+                    ),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    horizontal = 16.dp,
+                    vertical = 8.dp
                 )
+            ) {
+                items(products) { product ->
+                    ProductItem(
+                        product = product,
+                        onClick = {
+                            navigation.openScreenForResult<Product, String>(
+                                router = PRODUCT_DETAIL,
+                                params = product,
+                                serializer = Product.serializer(),
+                                onResult = {
+                                    KSLog.iRouter("跳转页面后返回的结果:$it")
+                                }
+                            )
+                        }
+                    )
+                }
             }
         }
     }
