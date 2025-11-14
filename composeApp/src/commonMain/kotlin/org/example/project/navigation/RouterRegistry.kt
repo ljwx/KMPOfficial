@@ -3,11 +3,13 @@ package org.example.project.navigation
 import org.example.project.log.KSLog
 import org.example.project.routes.MianHome
 import org.example.project.routes.ProductDetail
+import org.example.project.routes.TestWebView
 
 fun initializeRoutes() {
     RouterRegistry.registerAll(
         MianHome,
         ProductDetail,
+        TestWebView,
     )
 }
 

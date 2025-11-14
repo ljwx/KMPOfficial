@@ -92,6 +92,11 @@ kotlin {
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs) // 自动选择当前桌面的 Compose runtime。
             implementation(libs.kotlinx.coroutinesSwing) // Swing 事件循环上的协程支持。
+            // JavaFX 运行时依赖（用于 WebView）
+            implementation("org.openjfx:javafx-base:17.0.2")
+            implementation("org.openjfx:javafx-controls:17.0.2")
+            implementation("org.openjfx:javafx-web:17.0.2")
+            implementation("org.openjfx:javafx-graphics:17.0.2")
         }
     }
 }

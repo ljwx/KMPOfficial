@@ -4,5 +4,27 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<!-- 网络权限配置：允许应用访问网络 -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<!-- 允许加载任意网络内容（包括 HTTP 和 HTTPS） -->
+		<!-- 注意：生产环境建议只允许 HTTPS，或针对特定域名配置 -->
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<!-- 如果需要更安全的配置，可以取消上面的 NSAllowsArbitraryLoads，
+		     然后使用下面的配置只允许特定域名 -->
+		<!--
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>example.com</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+		</dict>
+		-->
+	</dict>
 </dict>
 </plist>

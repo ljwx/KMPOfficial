@@ -19,7 +19,13 @@ kotlin {
     iosArm64() // iOS 真机框架。
     iosSimulatorArm64() // iOS 模拟器框架。
 
-    jvm() // JVM（桌面 / Server 等）目标，支持在 JVM 环境复用 Shared 代码。
+    jvm {
+        compilations.all {
+            compilerOptions.configure {
+                jvmTarget.set(JvmTarget.JVM_11)
+            }
+        }
+    } // JVM（桌面 / Server 等）目标，支持在 JVM 环境复用 Shared 代码。
 
     js {
         browser() // Kotlin/JS 浏览器目标，面向 Web 端使用 Shared 逻辑。
@@ -39,6 +45,15 @@ kotlin {
         // 公共测试源集：为 Shared 模块提供平台无关的单元测试能力。
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+        }
+        // JVM 平台源集：添加 JavaFX 依赖用于桌面 WebView
+        // 注意：JavaFX 11+ 是模块化的，使用 compileOnly 避免编译时依赖问题
+        // 运行时需要确保 JavaFX 在类路径中
+        jvmMain.dependencies {
+            compileOnly("org.openjfx:javafx-base:17.0.2")
+            compileOnly("org.openjfx:javafx-controls:17.0.2")
+            compileOnly("org.openjfx:javafx-web:17.0.2")
+            compileOnly("org.openjfx:javafx-graphics:17.0.2")
         }
     }
 }

@@ -26,7 +26,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import com.jdcr.kmplog.KLog
 import kotlinx.coroutines.launch
-import org.example.project.commoncomposable.CommonTopBar
+import org.example.project.commoncomposable.CommonTopBarBack
 import org.example.project.log.ConstLogTag
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import androidx.compose.material3.NavigationBar
@@ -48,7 +48,6 @@ enum class HomeBottomTab(val label: String, val icon: ImageVector) {
 fun MainHomeContainer() {
     MaterialTheme {
         var selectedTab by remember { mutableStateOf(HomeBottomTab.Home) }
-        val topBarTitle = selectedTab.label
 
         val drawerState = rememberDrawerState(DrawerValue.Closed)
         val scope = rememberCoroutineScope()
@@ -80,12 +79,6 @@ fun MainHomeContainer() {
             }) {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    topBar = {
-                        CommonTopBar(
-                            title = topBarTitle,
-                            onBack = null
-                        )
-                    },
                     bottomBar = {
                         NavigationBar {
                             HomeBottomTab.values().forEach { tab ->
