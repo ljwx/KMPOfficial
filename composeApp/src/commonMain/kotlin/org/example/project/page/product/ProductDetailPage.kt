@@ -1,4 +1,4 @@
-package org.example.project.product
+package org.example.project.page.product
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

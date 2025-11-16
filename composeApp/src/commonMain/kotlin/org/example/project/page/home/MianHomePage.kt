@@ -1,10 +1,11 @@
-package org.example.project.home
+package org.example.project.page.home
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,11 +31,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinproject.composeapp.generated.resources.Res
 import kotlinproject.composeapp.generated.resources.compose_multiplatform
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.example.project.Greeting
 import org.example.project.PlatformType
 import org.example.project.getPlatform
 import org.example.project.log.KSLog
+import org.example.project.multiplestate.MultiStateLayout
+import org.example.project.multiplestate.MultiStateLayoutState
 import org.example.project.navigation.LocalAppNavigation
 import org.example.project.navigation.PRODUCT_DETAIL
 import org.example.project.network.api.ProductApiService
@@ -48,78 +52,83 @@ fun HomeScreen(
 ) {
     val greeting = remember { Greeting().greet() }
     val navigation = LocalAppNavigation.current
-    
+
     var products by remember { mutableStateOf(emptyList<ProductSummaryData>()) }
     val apiService = remember { ProductApiService() }
+    var multiState by remember { mutableStateOf<MultiStateLayoutState>(MultiStateLayoutState.Loading) }
+
     val scope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
-        scope.launch { 
-            apiService.getProducts().onSuccess { 
+        scope.launch {
+            apiService.getProducts().onSuccess {
+                delay(3000)
                 products = it
-            }.onFailure { 
-
+                multiState = MultiStateLayoutState.Content
+            }.onFailure {
+//                KSLog.iNet("请求失败了："+it)
             }
         }
     }
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .safeContentPadding(),
-    ) {
-        // 顶部欢迎信息
+    MultiStateLayout(state = multiState) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = modifier
+                .fillMaxSize()
+                .safeContentPadding(),
         ) {
-            Image(
-                painter = painterResource(Res.drawable.compose_multiplatform),
-                contentDescription = null,
-                modifier = Modifier.size(80.dp)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("Compose: $greeting", fontSize = 18.sp)
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 商品列表 - 根据平台设置不同的宽度
-        val isWeb = getPlatform().isPlatform(PlatformType.PLATFORM_WEB)
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = if (isWeb) Alignment.Center else Alignment.TopStart
-        ) {
-            LazyColumn(
+            // 顶部欢迎信息
+            Column(
                 modifier = Modifier
-                    .then(
-                        if (isWeb) {
-                            Modifier.fillMaxWidth(0.5f)
-                        } else {
-                            Modifier.fillMaxWidth()
-                        }
-                    ),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                    horizontal = 16.dp,
-                    vertical = 8.dp
-                )
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                items(products) { product ->
-                    ProductItem(
-                        product = product,
-                        onClick = {
-                            navigation.openScreenForResult<ProductSummaryData, String>(
-                                router = PRODUCT_DETAIL,
-                                params = product,
-                                serializer = ProductSummaryData.serializer(),
-                                onResult = {
-                                    KSLog.iRouter("跳转页面后返回的结果:$it")
-                                }
-                            )
-                        }
+                Image(
+                    painter = painterResource(Res.drawable.compose_multiplatform),
+                    contentDescription = null,
+                    modifier = Modifier.size(80.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Compose: $greeting", fontSize = 18.sp)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 商品列表 - 根据平台设置不同的宽度
+            val isWeb = getPlatform().isPlatform(PlatformType.PLATFORM_WEB)
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = if (isWeb) Alignment.Center else Alignment.TopStart
+            ) {
+                LazyColumn(
+                    modifier = Modifier
+                        .then(
+                            if (isWeb) {
+                                Modifier.fillMaxWidth(0.5f)
+                            } else {
+                                Modifier.fillMaxWidth()
+                            }
+                        ),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(
+                        horizontal = 16.dp,
+                        vertical = 8.dp
                     )
+                ) {
+                    items(products) { product ->
+                        ProductItem(
+                            product = product,
+                            onClick = {
+                                navigation.openScreenForResult<ProductSummaryData, String>(
+                                    router = PRODUCT_DETAIL,
+                                    params = product,
+                                    serializer = ProductSummaryData.serializer(),
+                                    onResult = {
+                                        KSLog.iRouter("跳转页面后返回的结果:$it")
+                                    }
+                                )
+                            }
+                        )
+                    }
                 }
             }
         }

@@ -10,4 +10,6 @@ object ConstLogTag {
 
     val NETWORK = PREFIX + "ntwk"
 
+    val MULTI_STATE = PREFIX + "multiState"
+
 }

@@ -1,4 +1,4 @@
-package org.example.project.home
+package org.example.project.page.home
 
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Box
@@ -26,15 +26,14 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import com.jdcr.kmplog.KLog
 import kotlinx.coroutines.launch
-import org.example.project.commoncomposable.CommonTopBarBack
 import org.example.project.log.ConstLogTag
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
-import org.example.project.settings.SettingsScreen
-import org.example.project.user.ProfileScreen
+import org.example.project.page.settings.SettingsScreen
+import org.example.project.page.user.ProfileScreen
 import androidx.compose.runtime.remember
 
 enum class HomeBottomTab(val label: String, val icon: ImageVector) {

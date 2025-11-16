@@ -2,7 +2,7 @@ package org.example.project.routes
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import org.example.project.home.MainHomeContainer
+import org.example.project.page.home.MainHomeContainer
 import org.example.project.navigation.ROUTER_HOME
 import org.example.project.navigation.ScreenRouteHandler
 import org.example.project.navigation.ScreenRouterData

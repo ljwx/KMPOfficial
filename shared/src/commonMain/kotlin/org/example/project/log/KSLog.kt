@@ -28,4 +28,16 @@ object KSLog {
         KLog.e(ConstLogTag.NETWORK, content, throwable)
     }
 
+    fun iMultiState(content: String, throwable: Throwable? = null) {
+        KLog.i(ConstLogTag.MULTI_STATE, content, throwable)
+    }
+
+    fun wMultiState(content: String, throwable: Throwable? = null) {
+        KLog.w(ConstLogTag.MULTI_STATE, content, throwable)
+    }
+
+    fun eMultiState(content: String, throwable: Throwable?) {
+        KLog.e(ConstLogTag.MULTI_STATE, content, throwable)
+    }
+
 }

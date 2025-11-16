@@ -1,6 +1,7 @@
 package org.example.project.network.api
 
 import io.ktor.client.call.body
+import io.ktor.client.plugins.timeout
 import io.ktor.client.request.get
 import io.ktor.http.headers
 import org.example.project.log.KSLog
@@ -19,6 +20,9 @@ class ProductApiService {
             val response: BaseApiResponse<List<ProductSummaryData>> = client.get(url) {
                 headers {
                     append("Accept", "application/json")
+                }
+                timeout {
+                    requestTimeoutMillis = 5000
                 }
             }.body()
             KSLog.iNet(response.toString())
