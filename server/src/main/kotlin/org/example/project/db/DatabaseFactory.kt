@@ -8,11 +8,17 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 object DatabaseFactory {
     fun init() {
-        val driverClassName = "org.h2.Driver"
-        // 使用 H2 内存数据库。";DB_CLOSE_DELAY=-1" 选项可以防止在最后一个连接关闭时丢失数据。
-        val jdbcURL = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"
+        // 切换为 MySQL 驱动
+        val driverClassName = "com.mysql.cj.jdbc.Driver"
+        // MySQL 连接 URL，指向本地 3306 端口的 ktor_db 数据库
+        // useSSL=false 是为了本地开发方便，生产环境建议配置 SSL
+        // ?serverTimezone=UTC 指定服务器时区为 UTC，避免时区问题
+        val jdbcURL = "jdbc:mysql://localhost:3306/ktor_db?useSSL=false&serverTimezone=UTC"
+        val user = "root" // 你的 MySQL 用户名
+        val password = "your_password" // 你的 MySQL 密码
+
         // 连接到数据库
-        val database = Database.connect(jdbcURL, driverClassName)
+        val database = Database.connect(jdbcURL, driverClassName, user, password)
         // 在一个事务中执行数据库操作
         transaction(database) {
             // 使用 SchemaUtils 自动创建或更新表结构

@@ -30,8 +30,8 @@ dependencies {
     implementation(libs.exposed.dao)
     // Exposed JDBC 驱动，用于连接数据库
     implementation(libs.exposed.jdbc)
-    // H2 数据库驱动，我们使用的内存数据库
-    implementation(libs.h2)
+    // MySQL 连接器驱动
+    implementation(libs.mysql.connector)
 
     testImplementation(libs.ktor.serverTestHost)
     testImplementation(libs.kotlin.testJunit)
