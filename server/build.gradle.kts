@@ -22,6 +22,12 @@ dependencies {
     // ContentNegotiation 和 JSON 序列化支持
     implementation(libs.ktor.serverContentNegotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
+    // CallLogging 请求日志插件
+    implementation(libs.ktor.serverCallLogging)
+    // StatusPages 状态页插件（用于统一错误处理）
+    implementation(libs.ktor.serverStatusPages)
+    // RateLimiting 限流插件
+    implementation(libs.ktor.serverRateLimiting)
 
     // --- 数据库依赖 ---
     // Exposed 核心库，提供了 DSL 功能
@@ -34,6 +40,8 @@ dependencies {
     implementation(libs.exposed.javatime)
     // MySQL 连接器驱动
     implementation(libs.mysql.connector)
+    // HikariCP 连接池
+    implementation(libs.hikaricp)
 
     testImplementation(libs.ktor.serverTestHost)
     testImplementation(libs.kotlin.testJunit)

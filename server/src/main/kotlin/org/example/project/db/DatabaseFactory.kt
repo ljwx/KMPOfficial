@@ -1,14 +1,18 @@
 package org.example.project.db
 
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.sql.DriverManager
+import org.slf4j.LoggerFactory
 import java.sql.DatabaseMetaData
 
 object DatabaseFactory {
+    private val logger = LoggerFactory.getLogger(DatabaseFactory::class.java)
+    
     /**
      * 检查表结构是否兼容
      * @param metaData 数据库元数据
@@ -41,7 +45,7 @@ object DatabaseFactory {
         for ((columnName, expectedType) in requiredColumns) {
             val actualType = existingColumns[columnName]
             if (actualType == null) {
-                println("缺少必需列: $columnName")
+                logger.warn("缺少必需列: $columnName")
                 return false
             }
             
@@ -54,7 +58,7 @@ object DatabaseFactory {
             }
             
             if (!typeMatches) {
-                println("列 $columnName 类型不匹配: 期望 $expectedType，实际 $actualType")
+                logger.warn("列 $columnName 类型不匹配: 期望 $expectedType，实际 $actualType")
                 return false
             }
         }
@@ -75,7 +79,7 @@ object DatabaseFactory {
      */
     fun init(dropExistingTable: Boolean = false) {
         // 切换为 MySQL 驱动
-        val driverClassName = "com.mysql.cj.jdbc.Driver"
+        val driverClassNameValue = "com.mysql.cj.jdbc.Driver"
         // MySQL 连接 URL
         val jdbcURL = System.getenv("JDBC_URL") 
             ?: "jdbc:mysql://localhost:3306/jdcr?useSSL=false&serverTimezone=Asia/Shanghai"
@@ -83,12 +87,35 @@ object DatabaseFactory {
         // 生产环境必须通过环境变量 DB_PASSWORD 设置密码，不要硬编码
         val password = System.getenv("DB_PASSWORD") ?: "Lj13641435978"
 
-        // 连接到数据库
-        val database = Database.connect(jdbcURL, driverClassName, user, password)
+        // 配置 HikariCP 连接池
+        val config = HikariConfig().apply {
+            jdbcUrl = jdbcURL
+            driverClassName = driverClassNameValue
+            username = user
+            this.password = password
+            // 连接池配置
+            maximumPoolSize = System.getenv("DB_MAX_POOL_SIZE")?.toIntOrNull() ?: 10
+            minimumIdle = System.getenv("DB_MIN_IDLE")?.toIntOrNull() ?: 5
+            connectionTimeout = System.getenv("DB_CONNECTION_TIMEOUT")?.toLongOrNull() ?: 30000L // 30秒
+            idleTimeout = System.getenv("DB_IDLE_TIMEOUT")?.toLongOrNull() ?: 600000L // 10分钟
+            maxLifetime = System.getenv("DB_MAX_LIFETIME")?.toLongOrNull() ?: 1800000L // 30分钟
+            poolName = "HikariCP-Pool"
+            // 连接测试
+            connectionTestQuery = "SELECT 1"
+            // 连接泄漏检测
+            leakDetectionThreshold = System.getenv("DB_LEAK_DETECTION_THRESHOLD")?.toLongOrNull() ?: 60000L // 60秒
+        }
         
-        // 在一个事务中执行数据库操作
+        val dataSource = HikariDataSource(config)
+        
+        // 使用 HikariCP 数据源连接到数据库
+        val database = Database.connect(dataSource)
+        
+        // 初始化表结构（使用事务确保原子性）
+        // 注意：初始化操作使用事务可以确保表创建的原子性，这是最佳实践
         transaction(database) {
-            val directConnection = DriverManager.getConnection(jdbcURL, user, password)
+            // 使用连接池获取连接进行元数据检查
+            val directConnection = dataSource.connection
             try {
                 val metaData = directConnection.metaData
                 val tables = metaData.getTables(null, null, "users", null)
@@ -98,10 +125,10 @@ object DatabaseFactory {
                     // 表存在，检查是否需要删除重建
                     if (dropExistingTable) {
                         // 强制删除模式（开发环境）
+                        logger.info("强制删除模式：删除旧表 users")
                         directConnection.createStatement().executeUpdate("DROP TABLE users")
-                        println("已删除旧表 users（强制删除模式）")
                         SchemaUtils.create(Users)
-                        println("已创建新表 users")
+                        logger.info("已创建新表 users")
                     } else {
                         // 生产环境模式：只进行增量更新，不删除表
                         // 这是最佳实践，避免数据丢失
@@ -109,9 +136,9 @@ object DatabaseFactory {
                         
                         if (isCompatible) {
                             // 表结构兼容，只添加缺失的列（增量更新）
-                            println("表结构兼容，使用增量更新模式")
+                            logger.info("表结构兼容，使用增量更新模式")
                             SchemaUtils.createMissingTablesAndColumns(Users)
-                            println("已完成表结构更新")
+                            logger.info("已完成表结构更新")
                         } else {
                             // 表结构不兼容
                             // 生产环境最佳实践：不自动删除表，而是抛出异常要求使用迁移工具
@@ -126,12 +153,13 @@ object DatabaseFactory {
                                 |当前表缺少的必需列或类型不匹配，请检查日志了解详情。
                             """.trimMargin()
                             
-                            println("警告: $errorMessage")
+                            logger.warn("表结构不兼容: $errorMessage")
                             // 尝试使用增量更新，可能会失败，但不删除表
                             try {
                                 SchemaUtils.createMissingTablesAndColumns(Users)
-                                println("已尝试增量更新，但可能不完整，请检查表结构")
+                                logger.warn("已尝试增量更新，但可能不完整，请检查表结构")
                             } catch (e: Exception) {
+                                logger.error("增量更新失败", e)
                                 throw IllegalStateException(
                                     "表结构不兼容且无法自动修复。$errorMessage",
                                     e
@@ -141,19 +169,18 @@ object DatabaseFactory {
                     }
                 } else {
                     // 表不存在，直接创建
-                    println("表 users 不存在，创建新表")
+                    logger.info("表 users 不存在，创建新表")
                     SchemaUtils.create(Users)
-                    println("已创建新表 users")
+                    logger.info("已创建新表 users")
                 }
             } catch (e: Exception) {
-                println("数据库初始化时出现异常: ${e.message}")
-                e.printStackTrace()
+                logger.error("数据库初始化时出现异常", e)
                 // 尝试使用 Exposed 的方式创建表
                 try {
                     SchemaUtils.createMissingTablesAndColumns(Users)
-                    println("已使用 Exposed 创建/更新表结构")
+                    logger.info("已使用 Exposed 创建/更新表结构")
                 } catch (e2: Exception) {
-                    println("创建表失败: ${e2.message}")
+                    logger.error("创建表失败", e2)
                     throw e2
                 }
             } finally {
