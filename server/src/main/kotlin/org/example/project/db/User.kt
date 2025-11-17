@@ -1,5 +1,6 @@
 package org.example.project.db
 
+import org.example.project.util.DateTimeUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.datetime
 import kotlinx.serialization.Serializable
@@ -49,8 +50,8 @@ data class User(
     val phone: String? = null,
     val status: String = UserStatus.INACTIVE.name,  // 序列化为字符串
     val role: String = UserRole.USER.name,          // 序列化为字符串
-    val createdAt: String = LocalDateTime.now().toString(),  // 序列化为字符串
-    val updatedAt: String = LocalDateTime.now().toString(),  // 序列化为字符串
+    val createdAt: String = DateTimeUtils.toISOString(DateTimeUtils.nowUTC()),  // UTC 时间，ISO 8601 格式
+    val updatedAt: String = DateTimeUtils.toISOString(DateTimeUtils.nowUTC()),  // UTC 时间，ISO 8601 格式
     val lastLoginAt: String? = null  // 序列化为字符串
 )
 
@@ -92,11 +93,12 @@ object Users : Table("users") {
     // 角色：用户角色，默认为普通用户
     val role = varchar("role", length = 20).default(UserRole.USER.name)
     
-    // 时间戳：创建时间
-    val createdAt = datetime("created_at").default(LocalDateTime.now())
+    // 时间戳：创建时间（统一存储 UTC 时间）
+    // 注意：MySQL DATETIME 类型不存储时区信息，应用层统一使用 UTC 时间存储
+    val createdAt = datetime("created_at").default(DateTimeUtils.nowUTC())
     
-    // 时间戳：更新时间
-    val updatedAt = datetime("updated_at").default(LocalDateTime.now())
+    // 时间戳：更新时间（统一存储 UTC 时间）
+    val updatedAt = datetime("updated_at").default(DateTimeUtils.nowUTC())
     
     // 时间戳：最后登录时间（可选）
     val lastLoginAt = datetime("last_login_at").nullable()
@@ -104,21 +106,7 @@ object Users : Table("users") {
     // 指定主键
     override val primaryKey = PrimaryKey(id)
     
-    // 索引定义
-    // 方式1: 单列索引 - 在列定义时使用 .index() 或 .uniqueIndex()
-    // username 和 email 已经通过 uniqueIndex() 创建了唯一索引
-    
-    // 方式2: 普通索引 - 使用 index() 函数创建单列索引
-    // 为 status 字段创建索引，用于快速查询特定状态的用户
-//    val statusIndex = index("idx_users_status", status, isUnique = false)
-    
-    // 方式3: 复合索引 - 使用 index() 函数创建多列索引
-    // 为 status 和 role 创建复合索引，用于快速查询特定状态和角色的用户
-//    val statusRoleIndex = index("idx_users_status_role", status, role, isUnique = false)
-    
-    // 方式4: 为 phone 创建索引（如果经常通过手机号查询）
-//    val phoneIndex = index("idx_users_phone", phone, isUnique = false)
-    
-    // 方式5: 为 createdAt 创建索引（如果经常按创建时间排序或查询）
-//    val createdAtIndex = index("idx_users_created_at", createdAt, isUnique = false)
+    // 索引说明：
+    // - username 和 email 已通过 uniqueIndex() 创建唯一索引
+    // - 如需添加其他索引（如 status、phone、createdAt），可在需要时通过数据库迁移添加
 }

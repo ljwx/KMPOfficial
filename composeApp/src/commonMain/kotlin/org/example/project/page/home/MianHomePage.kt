@@ -61,7 +61,6 @@ fun HomeScreen(
     LaunchedEffect(Unit) {
         scope.launch {
             apiService.getProducts().onSuccess {
-                delay(3000)
                 products = it
                 multiState = MultiStateLayoutState.Content
             }.onFailure {

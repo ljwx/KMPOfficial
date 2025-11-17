@@ -3,6 +3,7 @@ package org.example.project.db
 import org.example.project.db.DatabaseFactory.dbQuery
 import org.example.project.db.dto.CreateUserRequest
 import org.example.project.db.dto.UserResponse
+import org.example.project.util.DateTimeUtils
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import java.time.LocalDateTime
@@ -59,7 +60,7 @@ class UserService {
      * @return 返回创建成功并带有新 ID 的用户对象。
      */
     suspend fun createUser(request: CreateUserRequest, passwordHash: String): User {
-        val now = LocalDateTime.now()
+        val now = DateTimeUtils.nowUTC()
         val id = dbQuery {
             Users.insert {
                 it[username] = request.username
@@ -92,35 +93,6 @@ class UserService {
     }
 
     /**
-     * 创建一个新用户（兼容旧版本，直接使用 User 对象）。
-     * @param user 要创建的用户对象（id 通常被忽略）。
-     * @return 返回创建成功并带有新 ID 的用户对象。
-     */
-    suspend fun createUser(user: User): User {
-        val now = LocalDateTime.now()
-        val id = dbQuery {
-            Users.insert {
-                it[username] = user.username
-                it[email] = user.email
-                it[password] = user.password
-                it[nickname] = user.nickname
-                it[avatar] = user.avatar
-                it[phone] = user.phone
-                it[status] = user.status
-                it[role] = user.role
-                it[createdAt] = now
-                it[updatedAt] = now
-                it[lastLoginAt] = null
-            } get Users.id
-        }
-        return user.copy(
-            id = id,
-            createdAt = now.toString(),
-            updatedAt = now.toString()
-        )
-    }
-    
-    /**
      * 将 User 对象转换为 UserResponse DTO（不包含密码）。
      * @param user 用户对象。
      * @return 用户响应 DTO。
@@ -148,7 +120,7 @@ class UserService {
      * @return 返回更新后的用户对象，如果用户不存在则返回null。
      */
     suspend fun updateUser(id: Int, user: User): User? = dbQuery {
-        val now = LocalDateTime.now()
+        val now = DateTimeUtils.nowUTC()
         Users.update({ Users.id eq id }) {
             user.email?.let { email -> it[Users.email] = email }
             user.password.takeIf { it.isNotBlank() }?.let { password -> it[Users.password] = password }
@@ -167,7 +139,7 @@ class UserService {
      * @param id 用户ID。
      */
     suspend fun updateLastLogin(id: Int) = dbQuery {
-        val now = LocalDateTime.now()
+        val now = DateTimeUtils.nowUTC()
         Users.update({ Users.id eq id }) {
             it[lastLoginAt] = now
             it[updatedAt] = now
@@ -185,7 +157,7 @@ class UserService {
         } else {
             Users.update({ Users.id eq id }) {
                 it[status] = UserStatus.BANNED.name
-                it[updatedAt] = LocalDateTime.now()
+                it[updatedAt] = DateTimeUtils.nowUTC()
             }
         }
     }
@@ -195,18 +167,24 @@ class UserService {
      * @param row 数据库查询结果的一行。
      * @return 转换后的 User 对象。
      */
-    private fun resultRowToUser(row: ResultRow) = User(
-        id = row[Users.id],
-        username = row[Users.username],
-        email = row[Users.email],
-        password = row[Users.password],
-        nickname = row[Users.nickname],
-        avatar = row[Users.avatar],
-        phone = row[Users.phone],
-        status = row[Users.status],
-        role = row[Users.role],
-        createdAt = row[Users.createdAt].toString(),
-        updatedAt = row[Users.updatedAt].toString(),
-        lastLoginAt = row[Users.lastLoginAt]?.toString()
-    )
+    private fun resultRowToUser(row: ResultRow): User {
+        val createdAt = row[Users.createdAt]
+        val updatedAt = row[Users.updatedAt]
+        val lastLoginAt = row[Users.lastLoginAt]
+        
+        return User(
+            id = row[Users.id],
+            username = row[Users.username],
+            email = row[Users.email],
+            password = row[Users.password],
+            nickname = row[Users.nickname],
+            avatar = row[Users.avatar],
+            phone = row[Users.phone],
+            status = row[Users.status],
+            role = row[Users.role],
+            createdAt = DateTimeUtils.toISOString(createdAt),
+            updatedAt = DateTimeUtils.toISOString(updatedAt),
+            lastLoginAt = lastLoginAt?.let { DateTimeUtils.toISOString(it) }
+        )
+    }
 }
