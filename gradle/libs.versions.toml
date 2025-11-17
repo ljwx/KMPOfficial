@@ -24,6 +24,8 @@ exposed = "0.52.0"
 h2 = "2.2.224"
 mysql = "8.0.33"
 hikaricp = "5.1.0"
+multiplatformSettings = "1.1.1"
+androidx-datastore = "1.1.1"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -75,6 +77,9 @@ exposed-javatime = { module = "org.jetbrains.exposed:exposed-java-time", version
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
 mysql-connector = { module = "com.mysql:mysql-connector-j", version.ref = "mysql"}
 hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
+multiplatformSettings-core = { module = "com.russhwolf:multiplatform-settings", version.ref = "multiplatformSettings" }
+multiplatformSettings-datastore = { module = "com.russhwolf:multiplatform-settings-datastore", version.ref = "multiplatformSettings" }
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "androidx-datastore" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

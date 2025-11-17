@@ -49,6 +49,8 @@ kotlin {
             implementation(libs.ktor.serialization.kotlinx.json)
             // 日志支持（可选）
             implementation(libs.ktor.client.logging)
+            // 数据缓存
+            api(libs.multiplatformSettings.core)
         }
         // 公共测试源集：为 Shared 模块提供平台无关的单元测试能力。
         commonTest.dependencies {
