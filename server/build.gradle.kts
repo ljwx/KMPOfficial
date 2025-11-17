@@ -30,6 +30,8 @@ dependencies {
     implementation(libs.exposed.dao)
     // Exposed JDBC 驱动，用于连接数据库
     implementation(libs.exposed.jdbc)
+    // Exposed JavaTime 扩展，支持 Java 8+ 时间类型（LocalDateTime 等）
+    implementation(libs.exposed.javatime)
     // MySQL 连接器驱动
     implementation(libs.mysql.connector)
 
