@@ -25,9 +25,13 @@ fun AppRoot(modifier: Modifier = Modifier) {
     
     CompositionLocalProvider(LocalAppNavigation provides navigation) {
         navigation.Render(modifier = modifier.fillMaxSize(), null) { modifier, router, appNavigation ->
+            // 从 childStack 中获取当前活动的 Component 实例
+            val childStack = navigation.getChildStack()
+            val component = childStack.value.active.instance
+            
             val handler = RouterRegistry.getHandler(router.router)
             if (handler != null) {
-                handler.Content(router = router, modifier = modifier)
+                handler.Content(component = component, router = router, modifier = modifier)
             } else {
                 ErrorScreen(
                     message = "未找到路由处理器: ${router.router}",

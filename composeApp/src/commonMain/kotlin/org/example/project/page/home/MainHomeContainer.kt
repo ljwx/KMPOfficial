@@ -44,7 +44,7 @@ enum class HomeBottomTab(val label: String, val icon: ImageVector) {
 
 @Composable
 @Preview
-fun MainHomeContainer() {
+fun MainHomeContainer(component: HomeComponent? = null) {
     MaterialTheme {
         var selectedTab by remember { mutableStateOf(HomeBottomTab.Home) }
 
@@ -96,10 +96,16 @@ fun MainHomeContainer() {
                         .padding(innerPadding)
 
                     when (selectedTab) {
-                        HomeBottomTab.Home -> HomeScreen(
-                            tabTitle = selectedTab.label,
-                            modifier = contentModifier,
-                        )
+                        HomeBottomTab.Home -> {
+                            // Component 必须传入，因为现在使用 Component 架构
+                            component?.let { homeComponent ->
+                                HomeScreen(
+                                    component = homeComponent,
+                                    tabTitle = selectedTab.label,
+                                    modifier = contentModifier,
+                                )
+                            }
+                        }
 
                         HomeBottomTab.Profile -> ProfileScreen(modifier = contentModifier)
 

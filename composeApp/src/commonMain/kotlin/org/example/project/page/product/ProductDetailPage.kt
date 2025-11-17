@@ -24,11 +24,13 @@ import org.example.project.navigation.openScreen
 
 @Composable
 fun DetailScreen(
+    component: ProductDetailComponent,
     modifier: Modifier = Modifier,
 ) {
     val navigation = LocalAppNavigation.current
 
-    val product = navigation.getCurrentActiveInstance().getParamsSerialize<ProductSummaryData>()
+    // 从 Component 中获取商品信息，而不是从 navigation 中获取
+    val product = component.product
 
     MaterialTheme {
         Scaffold(topBar = { CommonTopBarBack("详情页", null) }) {

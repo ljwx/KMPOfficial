@@ -135,12 +135,12 @@ interface IAppNavigation {
         renderScreen: @Composable (Modifier, ScreenRouterData, AppNavigation) -> Unit
     )
 
-    fun customStackAnimation(router: ScreenRouterData?): StackAnimation<ScreenRouterData, ScreenRouterData>
+    fun customStackAnimation(router: ScreenRouterData?): StackAnimation<ScreenRouterData, ScreenComponent>
     
     /**
      * 获取导航堆栈，用于平台特定的集成（如 Web 历史记录同步）
      */
-    fun getChildStack(): Value<ChildStack<ScreenRouterData, ScreenRouterData>>
+    fun getChildStack(): Value<ChildStack<ScreenRouterData, ScreenComponent>>
 }
 
 class AppNavigation(componentContext: ComponentContext) : IAppNavigation,
@@ -150,26 +150,35 @@ class AppNavigation(componentContext: ComponentContext) : IAppNavigation,
 
     private val resultCallbacks = mutableMapOf<String, (Any?) -> Unit>()
 
-    private val childStack: Value<ChildStack<ScreenRouterData, ScreenRouterData>> =
+    // 使用 ScreenComponent 作为 child 类型，而不是 ScreenRouterData
+    // 这样 Component 实例会在导航栈中保持存活，状态不会丢失
+    private val childStack: Value<ChildStack<ScreenRouterData, ScreenComponent>> =
         childStack(
             source = navigation,
             serializer = ScreenRouterData.serializer(),
             initialConfiguration = ScreenRouterData(APP_SPLASH),
             handleBackButton = true,
             childFactory = { config, componentContext ->
-                config
+                // 根据路由找到对应的 RouteHandler，创建 Component 实例
+                val handler = RouterRegistry.getHandler(config.router)
+                if (handler != null) {
+                    handler.createComponent(config, componentContext)
+                } else {
+                    // 如果找不到处理器，创建一个默认的 Component
+                    DefaultScreenComponent(config, componentContext)
+                }
             }
         )
 
     override fun getCurrentActiveInstance(): ScreenRouterData {
-        return childStack.value.active.instance
+        return childStack.value.active.instance.config
     }
 
     init {
-        var previousStack: ChildStack<ScreenRouterData, ScreenRouterData>? = null
+        var previousStack: ChildStack<ScreenRouterData, ScreenComponent>? = null
 
         val cancellation = childStack.subscribe { stack ->
-            val currentRouter = stack.active.instance.router
+            val currentRouter = stack.active.instance.config.router
             val currentStackSize = stack.items.size
             KSLog.iRouter("当前页面:$currentRouter, 栈深度:$currentStackSize")
 
@@ -177,10 +186,10 @@ class AppNavigation(componentContext: ComponentContext) : IAppNavigation,
             if (previousStack != null) {
                 val previousStackSize = previousStack!!.items.size
                 if (currentStackSize < previousStackSize ||
-                    (previousStack!!.active.instance.router != currentRouter && currentStackSize <= previousStackSize)
+                    (previousStack!!.active.instance.config.router != currentRouter && currentStackSize <= previousStackSize)
                 ) {
                     // 获取被 pop 的页面信息
-                    val poppedScreen = previousStack!!.active.instance
+                    val poppedScreen = previousStack!!.active.instance.config
                     handlePagePopped(poppedScreen, currentRouter)
                 }
             }
@@ -259,7 +268,7 @@ class AppNavigation(componentContext: ComponentContext) : IAppNavigation,
 
             LaunchMode.SINGLE_TOP -> {
                 val topScreen = stackItems.lastOrNull()
-                if (topScreen?.instance?.router == router.router) {
+                if (topScreen?.instance?.config?.router == router.router) {
                     KSLog.iRouter("栈顶是${router.router}，复用当前实例")
                     // 可以在这里触发刷新逻辑，如果需要的话
                 } else {
@@ -269,7 +278,7 @@ class AppNavigation(componentContext: ComponentContext) : IAppNavigation,
 
             LaunchMode.SINGLE_TASK -> {
                 // SingleTask：查找栈中是否存在该页面
-                val existingIndex = stackItems.indexOfFirst { it.instance.router == router.router }
+                val existingIndex = stackItems.indexOfFirst { it.instance.config.router == router.router }
                 if (existingIndex >= 0) {
                     // 找到已存在的页面，清除其上所有页面
                     val existingConfig = stackItems[existingIndex].configuration
@@ -354,7 +363,7 @@ class AppNavigation(componentContext: ComponentContext) : IAppNavigation,
 
     override fun <R> navigateBackWithResult(result: R) {
         val currentStack = childStack.value
-        val currentScreen = currentStack.active.instance
+        val currentScreen = currentStack.active.instance.config
 
         // 获取当前页面的 requestId
         val requestId = currentScreen.requestId
@@ -379,11 +388,11 @@ class AppNavigation(componentContext: ComponentContext) : IAppNavigation,
         navigation.pop()
     }
 
-    override fun customStackAnimation(router: ScreenRouterData?): StackAnimation<ScreenRouterData, ScreenRouterData> {
+    override fun customStackAnimation(router: ScreenRouterData?): StackAnimation<ScreenRouterData, ScreenComponent> {
         return stackAnimation(animator = slide())
     }
 
-    override fun getChildStack(): Value<ChildStack<ScreenRouterData, ScreenRouterData>> {
+    override fun getChildStack(): Value<ChildStack<ScreenRouterData, ScreenComponent>> {
         return childStack
     }
 
@@ -394,7 +403,10 @@ class AppNavigation(componentContext: ComponentContext) : IAppNavigation,
         renderScreen: @Composable (Modifier, ScreenRouterData, AppNavigation) -> Unit
     ) {
         Children(stack = childStack, animation = customStackAnimation(router)) { child ->
-            renderScreen(modifier, child.instance, this)
+            // 传递 Component 和 config 给渲染函数
+            val component = child.instance
+            val config = component.config
+            renderScreen(modifier, config, this)
         }
     }
 

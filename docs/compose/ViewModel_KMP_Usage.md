@@ -33,15 +33,17 @@
 
 1.  **定义 Component**: 在 `commonMain` 中，为你的屏幕或功能创建一个 Component 接口和其实现类。这个实现类就是你的 ViewModel。
 2.  **注入 `ComponentContext`**: 让你的 Component 实现类在其构造函数中接收一个 `ComponentContext` 参数。这个 `context` 对象提供了生命周期 (`lifecycle`) 和状态保存 (`stateKeeper`) 的能力。
-3.  **使用 Coroutine Scope**: 你可以使用 `componentContext.lifecycle.coroutineScope` 来启动协程，这些协程会在 Component 销毁时自动取消，完美替代了 Android 的 `viewModelScope`。
+3.  **使用 Coroutine Scope**: 你可以使用 `essenty-lifecycle-coroutines` 库提供的 `coroutineScope()` 扩展函数来创建协程作用域，这些协程会在 Component 销毁时自动取消，完美替代了 Android 的 `viewModelScope`。
 
 ### 示例
 
 **`commonMain/kotlin/.../MyScreenComponent.kt`**
 ```kotlin
 import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 
 // 1. 定义接口
 interface MyScreenComponent {
@@ -61,9 +63,13 @@ class DefaultMyScreenComponent(
     private val _model = MutableStateFlow(MyScreenComponent.Model("Initial Text"))
     override val model: StateFlow<MyScreenComponent.Model> = _model
 
+    // 使用 coroutineScope() 扩展函数创建与生命周期绑定的协程作用域
+    // ComponentContext 实现了 LifecycleOwner，可以直接调用 coroutineScope()
+    private val componentScope = coroutineScope()
+
     init {
         // CoroutineScope 会在 Component 销毁时自动取消
-        lifecycle.coroutineScope.launch { 
+        componentScope.launch { 
             // 在这里处理你的业务逻辑
         }
     }
@@ -72,6 +78,12 @@ class DefaultMyScreenComponent(
         _model.value = MyScreenComponent.Model("Button Clicked!")
     }
 }
+```
+
+**依赖配置：**
+```kotlin
+// build.gradle.kts
+implementation("com.arkivanov.essenty:lifecycle-coroutines:2.5.0")
 ```
 
 **`commonMain/kotlin/.../RootComponent.kt` (导航层)**

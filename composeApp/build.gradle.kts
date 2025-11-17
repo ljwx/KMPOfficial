@@ -79,6 +79,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose) // Lifecycle 感知能力。
             implementation("com.arkivanov.decompose:decompose:3.4.0") // 多平台导航核心。
             implementation("com.arkivanov.decompose:extensions-compose:3.4.0") // Compose 集成辅助。
+            implementation("com.arkivanov.essenty:lifecycle-coroutines:2.5.0") // 生命周期协程支持，用于 Component 中的协程管理（版本需与 decompose 的 essenty 版本匹配）。
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.6.3") // Decompose 3.x 使用 kotlinx.serialization 保存配置。
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3") // JSON 序列化支持
             api(projects.shared) // 引入共享业务逻辑模块，导出给 iOS Framework 使用。

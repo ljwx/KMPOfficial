@@ -26,12 +26,12 @@ actual fun syncPlatformNavigation(navigation: IAppNavigation) {
             if (currentStackSize != previousStackSize) {
                 if (currentStackSize > previousStackSize) {
                     // 页面入栈（前进），添加历史记录
-                    val currentRoute = stack.active.instance.router
+                    val currentRoute = stack.active.instance.config.router
                     val url = window.location.pathname + "#$currentRoute"
                     window.history.pushState(null, "", url)
                 } else {
                     // 页面出栈（后退），更新 URL 但不添加历史记录
-                    val currentRoute = stack.active.instance.router
+                    val currentRoute = stack.active.instance.config.router
                     val url = window.location.pathname + "#$currentRoute"
                     window.history.replaceState(null, "", url)
                 }
@@ -40,7 +40,7 @@ actual fun syncPlatformNavigation(navigation: IAppNavigation) {
         }
         
         // 初始化：设置当前 URL
-        val initialRoute = childStack.value.active.instance.router
+        val initialRoute = childStack.value.active.instance.config.router
         val initialUrl = window.location.pathname + "#$initialRoute"
         if (window.location.hash != "#$initialRoute") {
             window.history.replaceState(null, "", initialUrl)
@@ -51,7 +51,7 @@ actual fun syncPlatformNavigation(navigation: IAppNavigation) {
             // 浏览器后退/前进时，Decompose 的 handleBackButton 会自动处理
             // 这里我们只需要确保 URL 与当前页面匹配
             val hash = window.location.hash.removePrefix("#")
-            val currentRoute = childStack.value.active.instance.router
+            val currentRoute = childStack.value.active.instance.config.router
             if (hash != currentRoute) {
                 // URL 与当前页面不匹配，更新 URL
                 val url = window.location.pathname + "#$currentRoute"
