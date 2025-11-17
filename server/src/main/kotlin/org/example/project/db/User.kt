@@ -104,7 +104,21 @@ object Users : Table("users") {
     // 指定主键
     override val primaryKey = PrimaryKey(id)
     
-    // 注意：username 和 email 已经通过 uniqueIndex() 创建了唯一索引
-    // 如果需要为 status 和 role 添加索引以提高查询性能，可以在数据库层面手动添加
-    // 或者在需要时使用 SchemaUtils.createIndex() 创建
+    // 索引定义
+    // 方式1: 单列索引 - 在列定义时使用 .index() 或 .uniqueIndex()
+    // username 和 email 已经通过 uniqueIndex() 创建了唯一索引
+    
+    // 方式2: 普通索引 - 使用 index() 函数创建单列索引
+    // 为 status 字段创建索引，用于快速查询特定状态的用户
+//    val statusIndex = index("idx_users_status", status, isUnique = false)
+    
+    // 方式3: 复合索引 - 使用 index() 函数创建多列索引
+    // 为 status 和 role 创建复合索引，用于快速查询特定状态和角色的用户
+//    val statusRoleIndex = index("idx_users_status_role", status, role, isUnique = false)
+    
+    // 方式4: 为 phone 创建索引（如果经常通过手机号查询）
+//    val phoneIndex = index("idx_users_phone", phone, isUnique = false)
+    
+    // 方式5: 为 createdAt 创建索引（如果经常按创建时间排序或查询）
+//    val createdAtIndex = index("idx_users_created_at", createdAt, isUnique = false)
 }
