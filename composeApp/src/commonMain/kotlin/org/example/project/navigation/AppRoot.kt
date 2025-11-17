@@ -7,6 +7,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import org.example.project.log.KSLog
 import org.example.project.multiplestate.ErrorScreen
+import org.example.project.statusbar.StatusBarConfig
+import org.example.project.statusbar.StatusBarStyle
 
 @Composable
 expect fun syncPlatformNavigation(navigation: IAppNavigation)
@@ -15,6 +17,8 @@ expect fun syncPlatformNavigation(navigation: IAppNavigation)
 fun AppRoot(modifier: Modifier = Modifier) {
     remember { initializeRoutes() }
     val navigation = rememberAppNavigation()
+    
+    StatusBarConfig(StatusBarStyle.LIGHT_CONTENT)
     
     // 平台特定的导航同步（如 Web 历史记录）
     syncPlatformNavigation(navigation)

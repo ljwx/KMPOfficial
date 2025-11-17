@@ -12,12 +12,12 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.plugins.calllogging.CallLogging
+import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import org.example.project.db.DatabaseFactory
 import org.example.project.db.UserService
 import org.example.project.db.dto.CreateUserRequest
-import org.example.project.db.dto.UserResponse
 import org.example.project.network.model.BaseApiResponse
 import org.example.project.network.model.ProductSummaryData
 import org.example.project.util.configureErrorHandling
@@ -111,6 +111,7 @@ fun Application.module() {
                                 message = "成功",
                                 data = products
                             )
+                            delay(3000)
                             call.respond(response)
                         }
                     }

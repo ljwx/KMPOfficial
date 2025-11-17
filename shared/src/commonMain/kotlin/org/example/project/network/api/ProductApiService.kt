@@ -14,7 +14,7 @@ class ProductApiService {
     private val client = HttpClientFactory.instance()
 
     suspend fun getProducts(): Result<List<ProductSummaryData>> {
-        val url = BaseApiService.getBaseUrl() + "products"
+        val url = BaseApiService.getBaseUrl() + "v1/products"
         KSLog.iNet("发起网络请求:$url")
         return try {
             val response: BaseApiResponse<List<ProductSummaryData>> = client.get(url) {

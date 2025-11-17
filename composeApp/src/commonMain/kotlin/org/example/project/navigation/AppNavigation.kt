@@ -143,13 +143,6 @@ interface IAppNavigation {
     fun getChildStack(): Value<ChildStack<ScreenRouterData, ScreenRouterData>>
 }
 
-private fun computeScreenState(stack: ChildStack<ScreenRouterData, ScreenRouterData>): ScreenRouterState {
-    val active = stack.active.instance
-    val size = stack.items.size
-    KSLog.iRouter("当前栈深度:$size,当前页面:" + active.router)
-    return ScreenRouterState(size > 1, routerMap[active.router]!!)
-}
-
 class AppNavigation(componentContext: ComponentContext) : IAppNavigation,
     ComponentContext by componentContext {
 
@@ -161,7 +154,7 @@ class AppNavigation(componentContext: ComponentContext) : IAppNavigation,
         childStack(
             source = navigation,
             serializer = ScreenRouterData.serializer(),
-            initialConfiguration = ScreenRouterData(ROUTER_HOME),
+            initialConfiguration = ScreenRouterData(APP_SPLASH),
             handleBackButton = true,
             childFactory = { config, componentContext ->
                 config
