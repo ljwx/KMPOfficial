@@ -412,6 +412,29 @@ class AppNavigation(componentContext: ComponentContext) : IAppNavigation,
 
 }
 
+/**
+ * @deprecated 此函数已废弃，请使用 RootComponent 来管理 AppNavigation 的生命周期。
+ * 
+ * 原因：
+ * - rememberAppNavigation() 依赖于 Compose 的 remember，在配置变更时会丢失状态
+ * - RootComponent 通过平台生命周期绑定，可以正确处理配置变更和进程重启
+ * 
+ * 迁移方式：
+ * - 在平台入口点创建 RootComponent（使用 AndroidLifecycleOwner、IOSLifecycleOwner 等）
+ * - 将 RootComponent 传递给 AppRoot(rootComponent = rootComponent)
+ * 
+ * 示例：
+ * ```kotlin
+ * // Android
+ * val lifecycleOwner = AndroidLifecycleOwner(this)
+ * val rootComponent = lifecycleOwner.createRootComponent(savedInstanceState)
+ * setContent { AppRoot(rootComponent = rootComponent) }
+ * ```
+ */
+@Deprecated(
+    message = "请使用 RootComponent 来管理 AppNavigation 的生命周期",
+    replaceWith = ReplaceWith("RootComponent(componentContext)")
+)
 @Composable
 fun rememberAppNavigation(): AppNavigation {
     val lifecycle = remember { LifecycleRegistry() }
@@ -422,7 +445,7 @@ fun rememberAppNavigation(): AppNavigation {
         }
     }
     return remember {
-        KSLog.iRouter("创建AppNavigation")
+        KSLog.wRouter("使用已废弃的 rememberAppNavigation()，建议迁移到 RootComponent")
         AppNavigation(DefaultComponentContext(lifecycle))
     }
 }

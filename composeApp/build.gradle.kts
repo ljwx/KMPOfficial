@@ -65,6 +65,7 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview) // Compose 预览支持。
             implementation(libs.androidx.activity.compose) // 与 ComponentActivity 交互。
+            implementation(libs.androidx.lifecycle.runtimeCompose) // Lifecycle 感知能力，用于手动绑定生命周期
         }
         // 公共业务层依赖：所有平台共享的 Compose 与业务模块。
         commonMain.dependencies {

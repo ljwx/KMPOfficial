@@ -4,6 +4,10 @@ import com.jdcr.kmplog.KLog
 
 object KSLog {
 
+    fun dRouter(content: String, throwable: Throwable? = null) {
+        KLog.d(ConstLogTag.ROUTER, content, throwable)
+    }
+
     fun iRouter(content: String, throwable: Throwable? = null) {
         KLog.i(ConstLogTag.ROUTER, content, throwable)
     }
