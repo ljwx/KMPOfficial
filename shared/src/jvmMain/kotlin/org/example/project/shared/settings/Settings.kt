@@ -1,6 +1,6 @@
 package org.example.project.shared.settings
 
-import com.russhwolf.settings.JvmPreferencesSettings
+import com.russhwolf.settings.PreferencesSettings
 import com.russhwolf.settings.Settings
 import java.util.prefs.Preferences
 
@@ -11,6 +11,6 @@ import java.util.prefs.Preferences
 actual class SettingsFactory {
     actual fun createSettings(): Settings {
         val delegate = Preferences.userRoot()
-        return JvmPreferencesSettings(delegate)
+        return PreferencesSettings(delegate)
     }
 }

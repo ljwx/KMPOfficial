@@ -1,33 +1,27 @@
 package org.example.project.pullrefresh
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 
 /**
- * 下拉刷新修饰符，兼容 Android Material 3 的 Modifier.pullRefresh API
- * 
- * 将此修饰符应用到可滚动内容上，以启用下拉刷新功能。
- * 
- * @param state PullRefreshState 实例
- * @return 应用了下拉刷新功能的 Modifier
+ * 下拉刷新修饰符
  */
 @Composable
 fun Modifier.pullRefresh(state: PullRefreshState): Modifier {
@@ -35,16 +29,7 @@ fun Modifier.pullRefresh(state: PullRefreshState): Modifier {
 }
 
 /**
- * 下拉刷新指示器，兼容 Android Material 3 的 PullRefreshIndicator API
- * 
- * 显示下拉刷新的进度指示器，通常放置在内容的顶部。
- * 
- * @param refreshing 是否正在刷新
- * @param state PullRefreshState 实例
- * @param modifier 应用于指示器的 Modifier
- * @param scale 指示器的缩放比例，默认根据进度自动调整
- * @param backgroundColor 指示器的背景颜色，默认使用 MaterialTheme 的背景色
- * @param contentColor 指示器的内容颜色，默认使用 MaterialTheme 的内容色
+ * 下拉刷新指示器
  */
 @Composable
 fun PullRefreshIndicator(
@@ -52,48 +37,39 @@ fun PullRefreshIndicator(
     state: PullRefreshState,
     modifier: Modifier = Modifier,
     scale: Boolean = true,
-    backgroundColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.surface,
     contentColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.primary
 ) {
-    val density = LocalDensity.current
-    val indicatorOffset = with(density) {
-        state.getIndicatorOffset().toDp()
-    }
-    
-    val scaleValue = if (scale && !refreshing) {
-        state.progress.coerceIn(0f, 1f)
-    } else {
-        1f
-    }
-
-    val alpha = if (refreshing || state.progress > 0f) {
-        1f
-    } else {
-        0f
-    }
-
-    val animatedAlpha by animateFloatAsState(
-        targetValue = alpha,
-        label = "PullRefreshIndicatorAlpha"
-    )
-
     Box(
         modifier = modifier
-            .fillMaxSize()
-            .padding(top = 8.dp),
-        contentAlignment = Alignment.TopCenter
+            .fillMaxWidth()
+            .height(56.dp),
+        contentAlignment = Alignment.Center
     ) {
-        if (animatedAlpha > 0f) {
+        val scaleValue = if (scale && !refreshing && state.progress < 1f) {
+            0.5f + (state.progress * 0.5f)
+        } else {
+            1f
+        }
+        
+        val alphaValue = if (state.progress > 0f || refreshing) 1f else 0f
+
+        if (refreshing) {
             CircularProgressIndicator(
                 modifier = Modifier
+                    .size(40.dp)
                     .scale(scaleValue)
-                    .offset(y = indicatorOffset),
-                progress = if (refreshing) {
-                    1f
-                } else {
-                    state.progress
-                },
-                color = contentColor.copy(alpha = animatedAlpha),
+                    .alpha(alphaValue),
+                color = contentColor,
+                strokeWidth = 3.dp
+            )
+        } else if (state.progress > 0f) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(40.dp)
+                    .scale(scaleValue)
+                    .alpha(alphaValue),
+                progress = { state.progress },
+                color = contentColor,
                 strokeWidth = 3.dp
             )
         }
@@ -101,38 +77,114 @@ fun PullRefreshIndicator(
 }
 
 /**
- * 下拉刷新容器，提供完整的下拉刷新功能
- * 
- * 这是一个便捷的 Composable，结合了 pullRefresh 修饰符和 PullRefreshIndicator。
- * 
- * @param refreshing 是否正在刷新
- * @param onRefresh 刷新回调函数
- * @param modifier 应用于容器的 Modifier
- * @param indicator 自定义的刷新指示器，默认使用 PullRefreshIndicator
- * @param content 内容 Composable
+ * 下拉刷新容器
  */
 @Composable
 fun PullRefreshBox(
     refreshing: Boolean,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
-    indicator: @Composable BoxScope.(PullRefreshState) -> Unit = { state ->
-        PullRefreshIndicator(
-            refreshing = refreshing,
-            state = state
-        )
+    enableContentOffset: Boolean = true,
+    indicator: @Composable (PullRefreshState) -> Unit = { state ->
+        PullRefreshIndicator(refreshing = refreshing, state = state)
     },
-    content: @Composable BoxScope.() -> Unit
+    content: @Composable () -> Unit
 ) {
     val state = rememberPullRefreshState(refreshing, onRefresh)
+    val density = LocalDensity.current
+    
+    // Indicator 偏移：从标题栏下（-56dp）拉出来
+    // 直接读取 state.dragDistance 以触发重组
+    val indicatorTargetOffset = with(density) { 
+        state.dragDistance.toDp()
+    }
+    
+    // 计算动画时长：根据下拉距离动态调整
+    val animationDuration = if (state.isRefreshing && indicatorTargetOffset > 0.dp) {
+        val currentDistance = indicatorTargetOffset
+        val targetDistance = with(density) { state.getRefreshThresholdPixels().toDp() }
+        val distanceToTravel = (currentDistance - targetDistance).value
+        if (distanceToTravel > 0) {
+            // 基础时长 180ms，每超过阈值 1dp 增加 1ms，最大不超过 300ms
+            val baseDuration = 180
+            val extraDuration = (distanceToTravel * 1f).toInt().coerceAtMost(120)
+            baseDuration + extraDuration
+        } else {
+            180
+        }
+    } else {
+        0
+    }
+    
+    val indicatorOffset by animateDpAsState(
+        targetValue = indicatorTargetOffset,
+        animationSpec = tween(
+            durationMillis = when {
+                !state.isRefreshing && indicatorTargetOffset == 0.dp && state.progress == 0f -> 400
+                state.isRefreshing && indicatorTargetOffset > 0.dp -> animationDuration
+                else -> 0
+            },
+            easing = if (state.isRefreshing && indicatorTargetOffset > 0.dp) {
+                // 回弹到刷新位置时使用更明显的弹簧效果
+                androidx.compose.animation.core.CubicBezierEasing(0.2f, 0f, 0.2f, 0.8f)
+            } else {
+                androidx.compose.animation.core.FastOutSlowInEasing
+            }
+        ),
+        label = "indicatorOffset"
+    )
+    
+    // 内容偏移：与 indicator 同步移动
+    val contentTargetOffset = if (enableContentOffset && (state.progress > 0f || state.isRefreshing)) {
+        with(density) { state.dragDistance.toDp() }
+    } else {
+        0.dp
+    }
+    
+    val contentOffset by animateDpAsState(
+        targetValue = contentTargetOffset,
+        animationSpec = tween(
+            durationMillis = when {
+                // 刷新结束时（归零）：400ms 平滑上移
+                contentTargetOffset == 0.dp && state.progress == 0f -> 400
+                // 触发刷新时：使用动态计算的动画时长，与 indicatorOffset 同步
+                state.isRefreshing && contentTargetOffset > 0.dp -> animationDuration
+                // 其他情况立即跟随
+                else -> 0
+            },
+            easing = if (state.isRefreshing && indicatorTargetOffset > 0.dp) {
+                // 回弹到刷新位置时使用更明显的弹簧效果
+                androidx.compose.animation.core.CubicBezierEasing(0.2f, 0f, 0.2f, 0.8f)
+            } else {
+                androidx.compose.animation.core.FastOutSlowInEasing
+            }
+        ),
+        label = "contentOffset"
+    )
     
     Box(
         modifier = modifier
             .fillMaxSize()
             .pullRefresh(state)
     ) {
-        content()
-        indicator(state)
+        // 内容区域
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .offset(y = contentOffset)
+        ) {
+            DisableOverscroll {
+                content()
+            }
+        }
+        
+        // Indicator 浮在上层，初始位置 -56dp（被标题栏遮住）
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .offset(y = indicatorOffset - 56.dp)
+        ) {
+            indicator(state)
+        }
     }
 }
-

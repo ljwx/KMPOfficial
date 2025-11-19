@@ -2,7 +2,9 @@ package org.example.project.navigation
 
 import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
+import com.arkivanov.essenty.lifecycle.pause
 import com.arkivanov.essenty.lifecycle.resume
+import com.arkivanov.essenty.lifecycle.stop
 import com.arkivanov.essenty.lifecycle.destroy
 import org.example.project.log.KSLog
 
@@ -97,7 +99,7 @@ class IOSLifecycleOwner : PlatformLifecycleOwner {
      * 可以在 UIViewController.viewWillDisappear 中调用。
      */
     fun pause() {
-        rootComponent?.lifecycle?.pause()
+        lifecycleRegistry?.pause()
     }
     
     /**
@@ -106,7 +108,7 @@ class IOSLifecycleOwner : PlatformLifecycleOwner {
      * 可以在 UIViewController.viewDidAppear 中调用。
      */
     fun resume() {
-        rootComponent?.lifecycle?.resume()
+        lifecycleRegistry?.resume()
     }
     
     /**
@@ -115,7 +117,7 @@ class IOSLifecycleOwner : PlatformLifecycleOwner {
      * 可以在 UIViewController.viewDidDisappear 中调用。
      */
     fun stop() {
-        rootComponent?.lifecycle?.stop()
+        lifecycleRegistry?.stop()
     }
     
     override fun destroyRootComponent() {

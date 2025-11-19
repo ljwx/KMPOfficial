@@ -65,6 +65,7 @@ kotlin {
             compileOnly("org.openjfx:javafx-web:17.0.2")
             compileOnly("org.openjfx:javafx-graphics:17.0.2")
             implementation(libs.ktor.client.cio)
+            implementation(libs.multiplatformSettings.core)
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.android)

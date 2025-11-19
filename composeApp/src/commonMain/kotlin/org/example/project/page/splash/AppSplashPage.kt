@@ -30,7 +30,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun AppSplashPage() {
     val navigation = LocalAppNavigation.current
-    var countdown by remember { mutableIntStateOf(3) } // 倒计时3秒
+    var countdown by remember { mutableIntStateOf(2) } // 倒计时3秒
     
     // 倒计时逻辑
     LaunchedEffect(Unit) {

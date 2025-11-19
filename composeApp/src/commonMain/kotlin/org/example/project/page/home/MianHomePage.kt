@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +36,7 @@ import org.example.project.log.KSLog
 import org.example.project.multiplestate.MultiStateLayout
 import org.example.project.navigation.LocalAppNavigation
 import org.example.project.navigation.PRODUCT_DETAIL
+import org.example.project.navigation.PULL_REFRESH_TEST
 import org.example.project.network.model.ProductSummaryData
 import org.jetbrains.compose.resources.painterResource
 
@@ -100,6 +102,18 @@ fun HomeScreen(
                         vertical = 8.dp
                     )
                 ) {
+                    // 添加下拉刷新示例按钮
+                    item {
+                        Button(
+                            onClick = {
+                                navigation.openScreen(PULL_REFRESH_TEST)
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("查看下拉刷新示例")
+                        }
+                    }
+                    
                     items(products) { product ->
                         ProductItem(
                             product = product,
