@@ -23,25 +23,23 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinproject.composeapp.generated.resources.Res
 import kotlinproject.composeapp.generated.resources.pickcat_login_bg
-import org.example.project.navigation.LocalAppNavigation
-import org.example.project.navigation.MAIN_HOME
+import org.example.project.navigation.LocalNavController
+import org.example.project.routes.RouterMainHome
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
-fun AppSplashPage() {
-    val navigation = LocalAppNavigation.current
-    var countdown by remember { mutableIntStateOf(2) } // 倒计时3秒
-    
-    // 倒计时逻辑
+fun AppSplashPage(modifier: Modifier = Modifier) {
+    var countdown by remember { mutableIntStateOf(2) }
+    val navController = LocalNavController.current
+
     LaunchedEffect(Unit) {
         while (countdown > 0) {
-            delay(1000) // 延迟1秒
+            delay(1000)
             countdown--
         }
-        // 倒计时结束后跳转到主页
-        navigation.openScreen(MAIN_HOME)
+        navController.navigate(RouterMainHome)
     }
-    
+
     MaterialTheme {
         Scaffold {
             Box(modifier = Modifier.fillMaxSize()) {
@@ -51,7 +49,7 @@ fun AppSplashPage() {
                     contentDescription = null,
                     contentScale = ContentScale.Crop
                 )
-                
+
                 if (countdown > 0) {
                     Text(
                         color = Color.White,

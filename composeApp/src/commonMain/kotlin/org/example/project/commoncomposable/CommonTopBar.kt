@@ -1,6 +1,5 @@
 package org.example.project.commoncomposable
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.WindowInsets
@@ -23,8 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.example.project.navigation.BackHandler
-import org.example.project.navigation.LocalAppNavigation
+import org.example.project.navigation.LocalNavController
 
 @Composable
 fun CommonTopBarBack(title: String, onBack: (() -> Unit)? = null) {
@@ -44,18 +42,7 @@ private fun CommonTopBar(
     showNavigation: Boolean = true,
     onBack: (() -> Unit)? = null
 ) {
-    val navigation = LocalAppNavigation.current
-    // 跨平台返回键处理示例
-    // 在 Android 上会拦截系统返回键，在其他平台上提供统一的 API
-    BackHandler(enabled = true) {
-        if (showNavigation) {
-            navigation.navigateBack()
-            // 返回 true 表示已处理返回键，阻止默认行为
-            true
-        } else {
-            false
-        }
-    }
+    val navController = LocalNavController.current
     CenterAlignedTopAppBar(
         modifier = Modifier
             .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
@@ -75,7 +62,8 @@ private fun CommonTopBar(
         navigationIcon = {
             if (showNavigation) {
                 IconButton(onClick = onBack ?: {
-                    navigation.navigateBack()
+                    navController.popBackStack()
+                    Unit
                 }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,

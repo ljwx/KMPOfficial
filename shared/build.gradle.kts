@@ -77,7 +77,8 @@ kotlin {
             implementation(libs.ktor.client.js)
         }
         wasmJsMain.dependencies {
-            implementation(libs.ktor.client.curl)
+            implementation(libs.ktor.client.js)
+            implementation(libs.multiplatformSettings.no.arg)
         }
     }
 }

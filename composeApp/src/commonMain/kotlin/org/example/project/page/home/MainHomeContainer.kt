@@ -44,12 +44,13 @@ enum class HomeBottomTab(val label: String, val icon: ImageVector) {
 
 @Composable
 @Preview
-fun MainHomeContainer(component: HomeComponent? = null) {
-    MaterialTheme {
-        var selectedTab by remember { mutableStateOf(HomeBottomTab.Home) }
+fun MainHomeContainer() {
 
-        val drawerState = rememberDrawerState(DrawerValue.Closed)
-        val scope = rememberCoroutineScope()
+    var selectedTab by remember { mutableStateOf(HomeBottomTab.Home) }
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+    MaterialTheme {
 
         ModalNavigationDrawer(drawerContent = {
             ModalDrawerSheet(modifier = Modifier.width(100.dp).pointerInput(Unit) {
@@ -96,16 +97,7 @@ fun MainHomeContainer(component: HomeComponent? = null) {
                         .padding(innerPadding)
 
                     when (selectedTab) {
-                        HomeBottomTab.Home -> {
-                            // Component 必须传入，因为现在使用 Component 架构
-                            component?.let { homeComponent ->
-                                HomeScreen(
-                                    component = homeComponent,
-                                    tabTitle = selectedTab.label,
-                                    modifier = contentModifier,
-                                )
-                            }
-                        }
+                        HomeBottomTab.Home -> HomeScreen()
 
                         HomeBottomTab.Profile -> ProfileScreen(modifier = contentModifier)
 

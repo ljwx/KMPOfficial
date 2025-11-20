@@ -1,6 +1,5 @@
 package org.example.project.shared.settings
 
-import com.russhwolf.settings.JsSettings
 import com.russhwolf.settings.Settings
 
 /**
@@ -9,7 +8,6 @@ import com.russhwolf.settings.Settings
  */
 actual class SettingsFactory {
     actual fun createSettings(): Settings {
-        // JS 和 WasmJs 可以共用 JsSettings
-        return JsSettings()
+        return Settings()
     }
 }
