@@ -27,6 +27,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import kotlinproject.composeapp.generated.resources.Res
 import kotlinproject.composeapp.generated.resources.compose_multiplatform
 import org.example.project.Greeting
@@ -38,6 +41,7 @@ import org.example.project.navigation.LocalAppNavigation
 import org.example.project.navigation.PRODUCT_DETAIL
 import org.example.project.navigation.PULL_REFRESH_TEST
 import org.example.project.network.model.ProductSummaryData
+import org.example.project.page.PullRefreshExamplePage
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -50,6 +54,8 @@ fun HomeScreen(
     tabTitle: String,
     modifier: Modifier = Modifier,
 ) {
+    val navController = rememberNavController()
+
     val greeting = remember { Greeting().greet() }
     val navigation = LocalAppNavigation.current
 
@@ -57,80 +63,94 @@ fun HomeScreen(
     // 注意：即使 Compose 组合被移除，Component 的状态仍然存在
     val products by component.products.collectAsState()
     val multiState by component.multiState.collectAsState()
-    MultiStateLayout(state = multiState) {
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .safeContentPadding(),
-        ) {
-            // 顶部欢迎信息
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Image(
-                    painter = painterResource(Res.drawable.compose_multiplatform),
-                    contentDescription = null,
-                    modifier = Modifier.size(80.dp)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("Compose: $greeting", fontSize = 18.sp)
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 商品列表 - 根据平台设置不同的宽度
-            val isWeb = getPlatform().isPlatform(PlatformType.PLATFORM_WEB)
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = if (isWeb) Alignment.Center else Alignment.TopStart
-            ) {
-                LazyColumn(
-                    modifier = Modifier
-                        .then(
-                            if (isWeb) {
-                                Modifier.fillMaxWidth(0.5f)
-                            } else {
-                                Modifier.fillMaxWidth()
-                            }
-                        ),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(
-                        horizontal = 16.dp,
-                        vertical = 8.dp
-                    )
+    
+    // NavHost 必须在 @Composable 函数的主体中声明
+    NavHost(
+        navController = navController,
+        startDestination = "home"
+    ) {
+        composable("home") {
+            MultiStateLayout(state = multiState) {
+                Column(
+                    modifier = modifier
+                        .fillMaxSize()
+                        .safeContentPadding(),
                 ) {
-                    // 添加下拉刷新示例按钮
-                    item {
-                        Button(
-                            onClick = {
-                                navigation.openScreen(PULL_REFRESH_TEST)
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("查看下拉刷新示例")
-                        }
+                    // 顶部欢迎信息
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = painterResource(Res.drawable.compose_multiplatform),
+                            contentDescription = null,
+                            modifier = Modifier.size(80.dp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Compose: $greeting", fontSize = 18.sp)
                     }
-                    
-                    items(products) { product ->
-                        ProductItem(
-                            product = product,
-                            onClick = {
-                                navigation.openScreenForResult<ProductSummaryData, String>(
-                                    router = PRODUCT_DETAIL,
-                                    params = product,
-                                    serializer = ProductSummaryData.serializer(),
-                                    onResult = {
-                                        KSLog.iRouter("跳转页面后返回的结果:$it")
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // 商品列表 - 根据平台设置不同的宽度
+                    val isWeb = getPlatform().isPlatform(PlatformType.PLATFORM_WEB)
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = if (isWeb) Alignment.Center else Alignment.TopStart
+                    ) {
+                        LazyColumn(
+                            modifier = Modifier
+                                .then(
+                                    if (isWeb) {
+                                        Modifier.fillMaxWidth(0.5f)
+                                    } else {
+                                        Modifier.fillMaxWidth()
+                                    }
+                                ),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            contentPadding = PaddingValues(
+                                horizontal = 16.dp,
+                                vertical = 8.dp
+                            )
+                        ) {
+                            // 添加下拉刷新示例按钮
+                            item {
+                                Button(
+                                    onClick = {
+                                        // 使用 navController.navigate() 来触发导航
+                                        navController.navigate("refresh")
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text("查看下拉刷新示例")
+                                }
+                            }
+                            
+                            items(products) { product ->
+                                ProductItem(
+                                    product = product,
+                                    onClick = {
+                                        navigation.openScreenForResult<ProductSummaryData, String>(
+                                            router = PRODUCT_DETAIL,
+                                            params = product,
+                                            serializer = ProductSummaryData.serializer(),
+                                            onResult = {
+                                                KSLog.iRouter("跳转页面后返回的结果:$it")
+                                            }
+                                        )
                                     }
                                 )
                             }
-                        )
+                        }
                     }
                 }
             }
+        }
+        
+        composable("refresh") {
+            PullRefreshExamplePage()
         }
     }
 }

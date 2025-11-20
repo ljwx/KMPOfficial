@@ -16,6 +16,9 @@ plugins {
     alias(libs.plugins.composeHotReload)
     // Kotlinx Serialization：生成跨平台序列化代码（Decompose 配置保存需要）。
     alias(libs.plugins.kotlinSerialization)
+    // room
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
 }
 
 kotlin {
@@ -66,6 +69,12 @@ kotlin {
             implementation(compose.preview) // Compose 预览支持。
             implementation(libs.androidx.activity.compose) // 与 ComponentActivity 交互。
             implementation(libs.androidx.lifecycle.runtimeCompose) // Lifecycle 感知能力，用于手动绑定生命周期
+            // Room 和 SQLite 依赖（仅支持 Android/iOS/JVM，不支持 JS/WASM）
+            implementation(libs.androidx.room.runtime)
+            implementation(libs.androidx.sqlite.bundled)
+            // Koin 依赖（不支持 wasmJs）
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
         }
         // 公共业务层依赖：所有平台共享的 Compose 与业务模块。
         commonMain.dependencies {
@@ -85,11 +94,37 @@ kotlin {
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3") // JSON 序列化支持
             api(projects.shared) // 引入共享业务逻辑模块，导出给 iOS Framework 使用。
             api(projects.kmplog) // 导出跨平台日志模块，确保 Clock.System 打包进 iOS Framework。
+            //=== 官方全家桶 ===
+            implementation(libs.androidx.navigation.compose)
+//            implementation(libs.androidx.lifecycle.viewmodel) //上面已经有了
+//            implementation(libs.androidx.lifecycle.runtime.compose)
+            // 注意：Room 和 SQLite 已移到平台特定源集（androidMain, iosMain, jvmMain），因为它们不支持 JS/WASM
+            // 注意：Koin 已移到平台特定源集（androidMain, iosMain, jvmMain），因为它不支持 wasmJs
         }
         // 公共测试依赖：提供 Kotlin/Multiplatform 单元测试能力。
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
+        // iOS 共享源集：Room 和 SQLite 依赖（仅支持 Android/iOS/JVM，不支持 JS/WASM）
+        val iosMain by creating {
+            dependsOn(commonMain.get())
+            dependencies {
+                implementation(libs.androidx.room.runtime)
+                implementation(libs.androidx.sqlite.bundled)
+                // Koin 依赖（不支持 wasmJs）
+                implementation(libs.koin.core)
+                implementation(libs.koin.compose)
+            }
+        }
+        
+        // iOS 各平台源集依赖于共享的 iosMain
+        val iosArm64Main by getting {
+            dependsOn(iosMain)
+        }
+        val iosSimulatorArm64Main by getting {
+            dependsOn(iosMain)
+        }
+        
         // JVM (桌面) 端专属依赖。
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs) // 自动选择当前桌面的 Compose runtime。
@@ -99,8 +134,19 @@ kotlin {
             implementation("org.openjfx:javafx-controls:17.0.2")
             implementation("org.openjfx:javafx-web:17.0.2")
             implementation("org.openjfx:javafx-graphics:17.0.2")
+            // Room 和 SQLite 依赖（仅支持 Android/iOS/JVM，不支持 JS/WASM）
+            implementation(libs.androidx.room.runtime)
+            implementation(libs.androidx.sqlite.bundled)
+            // Koin 依赖（不支持 wasmJs）
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
         }
     }
+}
+
+// Room 必须配置 schema 目录
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 // Android Gradle 插件专属配置：决定 Android 产物打包细节。
@@ -134,9 +180,11 @@ android {
     }
 }
 
-// 额外依赖：仅在 debug 构建下启用 Compose 预览工具。
 dependencies {
+// 额外依赖：仅在 debug 构建下启用 Compose 预览工具。
     debugImplementation(compose.uiTooling)
+    // KSP配置
+    add("kspCommonMainMetadata", libs.androidx.room.compiler)
 }
 
 // Compose Desktop 特有配置：定义桌面应用入口与打包格式。
