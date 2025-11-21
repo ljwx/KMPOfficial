@@ -43,10 +43,10 @@ kotlin {
             // 例如添加 kotlinx.coroutines、kotlinx.serialization 等库放在这里。
             api(projects.kmplog)
             // Ktor Client 核心
-            implementation(libs.ktor.client.core)
+            api(libs.ktor.client.core)
             // 内容协商和 JSON 序列化
-            implementation(libs.ktor.client.content.negotiation)
-            implementation(libs.ktor.serialization.kotlinx.json)
+            api(libs.ktor.client.content.negotiation)
+            api(libs.ktor.serialization.kotlinx.json)
             // 日志支持（可选）
             implementation(libs.ktor.client.logging)
             // 数据缓存
@@ -64,20 +64,20 @@ kotlin {
             compileOnly("org.openjfx:javafx-controls:17.0.2")
             compileOnly("org.openjfx:javafx-web:17.0.2")
             compileOnly("org.openjfx:javafx-graphics:17.0.2")
-            implementation(libs.ktor.client.cio)
+            api(libs.ktor.client.cio)
             implementation(libs.multiplatformSettings.core)
         }
         androidMain.dependencies {
-            implementation(libs.ktor.client.android)
+            api(libs.ktor.client.android)
         }
         iosMain.dependencies {
-            implementation(libs.ktor.client.ios)
+            api(libs.ktor.client.ios)
         }
         jsMain.dependencies {
-            implementation(libs.ktor.client.js)
+            api(libs.ktor.client.js)
         }
         wasmJsMain.dependencies {
-            implementation(libs.ktor.client.js)
+            api(libs.ktor.client.js)
             implementation(libs.multiplatformSettings.no.arg)
         }
     }

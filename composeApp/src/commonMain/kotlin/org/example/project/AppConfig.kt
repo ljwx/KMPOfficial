@@ -1,5 +1,8 @@
 package org.example.project
 
+import org.example.project.feature.product.IProductRepository
+import org.example.project.feature.product.ProductRepository
+import org.example.project.feature.product.ProductViewModel
 import org.example.project.feature.user.UserAuthRepositoryImpl
 import org.example.project.feature.user.UserAuthViewModel
 import org.example.project.feature.work.WorkDetailRepositoryImpl
@@ -24,6 +27,8 @@ val appModule = module {
     // 每次获取时都创建新实例
     // 适用场景：需要动态参数的对象、临时对象
     factory { (workId: String) -> WorkDetailRepositoryImpl(workId) }
+    // 注册接口类型，ViewModel 可以通过接口类型注入
+    factory<IProductRepository> { ProductRepository() }
     
     // ========== 3. scoped - 作用域单例 ==========
     // 在特定作用域（scope）内是单例，作用域销毁后实例也会销毁
@@ -71,6 +76,8 @@ val appModule = module {
     // 示例：
     // factory { (id: String) -> MyClass(id) }
     // 使用：get<MyClass> { parametersOf("123") }
+
+    viewModelOf(::ProductViewModel)
 }
 
 fun initKoin(appDeclaration: KoinAppDeclaration = {}) = startKoin {

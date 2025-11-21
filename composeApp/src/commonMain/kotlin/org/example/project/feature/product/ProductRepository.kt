@@ -1,22 +1,24 @@
-package org.example.project.network.api
+package org.example.project.feature.product
 
 import io.ktor.client.call.body
 import io.ktor.client.plugins.timeout
 import io.ktor.client.request.get
 import io.ktor.http.headers
 import org.example.project.log.KSLog
+import org.example.project.network.api.BaseApiService
 import org.example.project.network.client.HttpClientFactory
 import org.example.project.network.model.BaseApiResponse
 import org.example.project.network.model.ProductSummaryData
 
-class ProductApiService {
+class ProductRepository : IProductRepository {
 
     private val client = HttpClientFactory.instance()
 
-    suspend fun getProducts(): Result<List<ProductSummaryData>> {
+    override suspend fun getProductList(): Result<BaseApiResponse<List<ProductSummaryData>>> {
         val url = BaseApiService.getBaseUrl() + "v1/products"
-        KSLog.iNet("发起网络请求:$url")
+        KSLog.iNet("Repository: 发起网络请求: $url")
         return try {
+            KSLog.iNet("Repository: 开始执行网络请求...")
             val response: BaseApiResponse<List<ProductSummaryData>> = client.get(url) {
                 headers {
                     append("Accept", "application/json")
@@ -25,20 +27,11 @@ class ProductApiService {
                     requestTimeoutMillis = 5000
                 }
             }.body()
-            KSLog.iNet(response.toString())
-            if (response.isCodeSuccess()) {
-                if (response.isSuccessTrue()) {
-                    Result.success(response.data!!)
-                } else {
-                    Result.failure(Exception("数据是空的"))
-                }
-            } else {
-                Result.failure(Exception(response.getMessage()))
-            }
+            KSLog.iNet("Repository: 网络请求完成，code=${response.code}, data size=${response.data?.size ?: 0}")
+            Result.success(response)
         } catch (e: Exception) {
-            KSLog.eNet("请求异常", e)
+            KSLog.eNet("Repository: 请求异常", e)
             Result.failure(e)
         }
     }
-
 }

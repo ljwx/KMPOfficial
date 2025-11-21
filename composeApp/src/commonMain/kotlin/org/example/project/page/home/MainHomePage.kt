@@ -15,10 +15,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,14 +34,18 @@ import kotlinproject.composeapp.generated.resources.Res
 import kotlinproject.composeapp.generated.resources.compose_multiplatform
 import org.example.project.Greeting
 import org.example.project.PlatformType
+import org.example.project.feature.product.ProductViewModel
 import org.example.project.getPlatform
 import org.example.project.multiplestate.MultiStateLayout
 import org.example.project.multiplestate.MultiStateLayoutState
+import kotlinx.serialization.json.Json
 import org.example.project.navigation.LocalNavController
 import org.example.project.network.model.ProductSummaryData
 import org.example.project.page.PullRefreshExamplePage
+import org.example.project.routes.RouterProductDetail
 import org.example.project.routes.RouterPullRefresh
 import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * 使用 Component 架构的 HomeScreen（推荐）
@@ -50,13 +57,14 @@ fun HomeScreen(
 ) {
     val navController = LocalNavController.current
     val greeting = remember { Greeting().greet() }
+    val viewModel = koinViewModel<ProductViewModel>()
 
-    // 从 Component 的 StateFlow 中收集状态
-    // 注意：即使 Compose 组合被移除，Component 的状态仍然存在
-//    val products by component.products.collectAsState()
-//    val multiState by component.multiState.collectAsState()
+    val products = viewModel.productList.collectAsState()
+    val multiState = viewModel.multiState.collectAsState()
+    
+    LaunchedEffect(Unit) { viewModel.getList() }
 
-    MultiStateLayout(state = MultiStateLayoutState.Content) {
+    MultiStateLayout(state = multiState.value) {
         Column(
             modifier = modifier
                 .fillMaxSize()
@@ -113,13 +121,15 @@ fun HomeScreen(
                         }
                     }
 
-//                            items(products) { product ->
-//                                ProductItem(
-//                                    product = product,
-//                                    onClick = {
-//                                    }
-//                                )
-//                            }
+                    items(products.value) { product ->
+                        ProductItem(
+                            product = product,
+                            onClick = {
+                                val productJson = Json.encodeToString(ProductSummaryData.serializer(), product)
+                                navController.navigate(RouterProductDetail(productJson))
+                            }
+                        )
+                    }
                 }
             }
         }

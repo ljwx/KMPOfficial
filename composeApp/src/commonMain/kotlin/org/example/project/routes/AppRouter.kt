@@ -12,4 +12,7 @@ object RouterMainHome
 object RouterPullRefresh
 
 @Serializable
+data class RouterProductDetail(val productJson: String)
+
+@Serializable
 data class Detail(val id: String, val fromSource: String)
