@@ -25,12 +25,16 @@ import kotlinproject.composeapp.generated.resources.Res
 import kotlinproject.composeapp.generated.resources.pickcat_login_bg
 import org.example.project.navigation.LocalNavController
 import org.example.project.routes.RouterMainHome
+import org.example.project.statusbar.StatusBarConfig
+import org.example.project.statusbar.StatusBarStyle
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun AppSplashPage(modifier: Modifier = Modifier) {
     var countdown by remember { mutableIntStateOf(2) }
     val navController = LocalNavController.current
+    
+    StatusBarConfig(StatusBarStyle.LIGHT_CONTENT)
 
     LaunchedEffect(Unit) {
         while (countdown > 0) {

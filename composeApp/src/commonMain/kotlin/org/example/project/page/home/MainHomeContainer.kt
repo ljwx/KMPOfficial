@@ -35,6 +35,8 @@ import androidx.compose.material3.Icon
 import org.example.project.page.settings.SettingsScreen
 import org.example.project.page.user.ProfileScreen
 import androidx.compose.runtime.remember
+import org.example.project.statusbar.StatusBarConfig
+import org.example.project.statusbar.StatusBarStyle
 
 enum class HomeBottomTab(val label: String, val icon: ImageVector) {
     Home("主页", Icons.Filled.Home),
@@ -45,6 +47,8 @@ enum class HomeBottomTab(val label: String, val icon: ImageVector) {
 @Composable
 @Preview
 fun MainHomeContainer() {
+
+    StatusBarConfig(StatusBarStyle.DARK_CONTENT)
 
     var selectedTab by remember { mutableStateOf(HomeBottomTab.Home) }
     val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -94,10 +98,10 @@ fun MainHomeContainer() {
                 ) { innerPadding ->
                     val contentModifier = Modifier
                         .fillMaxSize()
-                        .padding(innerPadding)
+                        .padding(bottom = innerPadding.calculateBottomPadding())
 
                     when (selectedTab) {
-                        HomeBottomTab.Home -> MainHomePage()
+                        HomeBottomTab.Home -> MainHomePage(modifier = contentModifier)
 
                         HomeBottomTab.Profile -> ProfileScreen(modifier = contentModifier)
 

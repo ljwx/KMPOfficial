@@ -23,6 +23,7 @@ class ProductViewModel(private val repository: IProductRepository) : ViewModel()
     val effect = _effect.receiveAsFlow()
 
     init {
+        KSLog.dRouter("当前ViewModel初始化:$this")
         getList()
     }
 
@@ -45,8 +46,22 @@ class ProductViewModel(private val repository: IProductRepository) : ViewModel()
 
     fun showToast(message: String) {
         viewModelScope.launch {
-            _effect.send(org.example.project.page.home.HomeEffect.ShowToast(message))
+            _effect.send(HomeEffect.ShowToast(message))
         }
+    }
+
+    fun getDetail(productId: Int): ProductSummaryData? {
+        productList.value.forEach {
+            if (it.id == productId) {
+                return it
+            }
+        }
+        return null
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        KSLog.dRouter("当前ViewModel被清理:$this")
     }
 
 }

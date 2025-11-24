@@ -22,7 +22,7 @@ fun AppRootPage(
     modifier: Modifier = Modifier
 ) {
     AppTheme {
-        StatusBarConfig(StatusBarStyle.LIGHT_CONTENT)
+        StatusBarConfig(StatusBarStyle.DARK_CONTENT)
 
         // 平台特定的导航同步（如 Web 历史记录）
         // syncPlatformNavigation(navigation)

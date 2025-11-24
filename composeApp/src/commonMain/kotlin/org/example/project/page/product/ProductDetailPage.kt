@@ -15,10 +15,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.example.project.commoncomposable.CommonTopBarBack
+import org.example.project.feature.product.ProductViewModel
 import org.example.project.network.model.ProductSummaryData
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun DetailScreen(
+    viewModel: ProductViewModel = koinViewModel(),
     product: ProductSummaryData,
     modifier: Modifier = Modifier,
 ) {

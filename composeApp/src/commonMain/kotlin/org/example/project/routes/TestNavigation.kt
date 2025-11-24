@@ -14,11 +14,8 @@ fun NavGraphBuilder.testGraph() {
     }
 
     composable<RouterProductDetail> { backStackEntry ->
-        // 使用 toRoute() 获取类型安全的路由参数
         val route = backStackEntry.toRoute<RouterProductDetail>()
-        // 反序列化 JSON 字符串为 ProductSummaryData 对象
         val product = Json.decodeFromString<ProductSummaryData>(route.productJson)
-        
         DetailScreen(product = product)
     }
 }
