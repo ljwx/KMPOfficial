@@ -97,7 +97,7 @@ fun MainHomeContainer() {
                         .padding(innerPadding)
 
                     when (selectedTab) {
-                        HomeBottomTab.Home -> HomeScreen()
+                        HomeBottomTab.Home -> MainHomePage()
 
                         HomeBottomTab.Profile -> ProfileScreen(modifier = contentModifier)
 

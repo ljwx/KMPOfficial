@@ -1,622 +1,158 @@
-# Compose 副作用 API 详解
+# Compose Side Effects 决策指南
 
-本文档详细解释 Compose 中的副作用（Side Effect）概念以及常用的副作用 API，帮助你理解如何在 Compose 中安全地执行副作用操作。
-
----
-
-## 1. 什么是副作用（Side Effect）？
-
-**副作用**是指函数执行时除了返回值外，还会影响外部状态或执行外部操作。
-
-### 纯函数 vs 副作用
-
-```kotlin
-// ✅ 纯函数：只计算，不改变外部状态
-fun add(a: Int, b: Int): Int {
-    return a + b  // 只返回结果，不影响外部
-}
-
-// ❌ 副作用：改变外部状态或执行外部操作
-fun updateDatabase() {
-    database.save()  // 改变数据库状态
-}
-
-fun startTimer() {
-    timer.start()  // 启动外部定时器
-}
-
-fun subscribeToEvents() {
-    eventBus.subscribe { ... }  // 注册监听器
-}
-```
+本文档旨在帮助你快速选择正确的 Compose 副作用 API。不要死记硬背 API，而是根据**你的需求**来选择。
 
 ---
 
-## 2. Compose 中的副作用问题
+## 🚀 快速决策树 (Decision Tree)
 
-在 Compose 中，Composable 函数应该是**纯函数**，但有时需要执行副作用操作。
+**Q1: 你想做什么？**
 
-### 问题：重组导致重复执行
+*   **A. 我想在某个状态变化时，执行一段代码（非 UI 渲染）。**
+    *   *是异步操作吗？（如网络请求、倒计时）*
+        *   ✅ 是 -> **`LaunchedEffect`**
+        *   ❌ 否 -> **`SideEffect`** (极少用) 或直接写在 `LaunchedEffect` 里
+    *   *需要清理资源吗？（如注册监听器、绑定 Service）*
+        *   ✅ 是 -> **`DisposableEffect`**
 
-```kotlin
-@Composable
-fun MyScreen() {
-    var count by remember { mutableStateOf(0) }
-    
-    // ❌ 问题：每次重组都会执行
-    println("执行了 $count 次")  // 每次重组都打印
-    startTimer()  // 每次重组都启动定时器（内存泄漏！）
-    
-    Button(onClick = { count++ }) {
-        Text("点击: $count")
-    }
-}
-```
+*   **B. 我想把非 Compose 的状态（如 Flow, LiveData）转为 Compose State。**
+    *   *是 Flow/StateFlow 吗？*
+        *   ✅ 是 -> **`collectAsState()`** (或 `collectAsStateWithLifecycle`)
+    *   *是其他回调/监听器吗？*
+        *   ✅ 是 -> **`produceState`**
 
-**问题**：每次状态变化都会触发重组，导致副作用重复执行，可能造成：
-- 资源泄漏（重复创建订阅、定时器）
-- 性能问题（重复执行昂贵操作）
-- 逻辑错误（重复发送请求）
+*   **C. 我想在用户点击按钮（回调）时启动协程。**
+    *   ✅ 是 -> **`rememberCoroutineScope`**
 
-### 解决方案：使用副作用 API
-
-副作用 API 确保副作用在**正确的时机**执行，且**不会重复执行**。
+*   **D. 我想根据其他 State 计算出一个新 State，且计算很耗时。**
+    *   ✅ 是 -> **`derivedStateOf`**
 
 ---
 
-## 3. 常用的副作用 API
+## 1. 场景一：进入页面或状态变化时执行 (One-off Actions)
 
-### 3.1 `remember` - 记住值
-
-**作用**：在首次组合时创建值，重组时复用同一个实例。
+### ✅ `LaunchedEffect`
+**场景**：我想在进入页面时请求数据，或者在 `userId` 变化时重新请求。
+**特点**：自动在协程中执行，离开页面或 Key 变化时自动取消旧协程。
 
 ```kotlin
-@Composable
-fun MyScreen() {
-    // 只在首次组合时创建，重组时复用
-    val expensiveObject = remember { 
-        ExpensiveObject()  // 只创建一次
-    }
-    
-    // 带 key 的 remember：key 变化时重新计算
-    val computedValue = remember(key1, key2) {
-        computeValue(key1, key2)
-    }
+// 场景：进入页面加载数据
+LaunchedEffect(Unit) {
+    viewModel.refresh()
 }
-```
 
-**特点**：
-- 首次组合时执行
-- 重组时复用（除非 key 变化）
-- 组合结束时自动清理
-
-**适用场景**：
-- 记住计算结果
-- 记住对象实例
-- 记住状态
-
----
-
-### 3.2 `DisposableEffect` - 可清理的副作用
-
-**作用**：执行需要清理的副作用（订阅、监听器等）。
-
-```kotlin
-@Composable
-fun MyScreen() {
-    DisposableEffect(Unit) {
-        // 组合时执行
-        val subscription = eventBus.subscribe { ... }
-        val timer = Timer().apply { start() }
-        
-        // 离开组合时自动执行清理
-        onDispose {
-            subscription.unsubscribe()
-            timer.stop()
-        }
-    }
-}
-```
-
-**特点**：
-- 在组合时执行一次
-- 在离开组合时自动执行 `onDispose`
-- key 变化时：先执行旧的 `onDispose`，再执行新的 lambda
-
-**适用场景**：
-- 订阅事件总线
-- 注册监听器
-- 启动定时器
-- 管理资源（文件、网络连接）
-
-**实际应用示例**：
-
-```kotlin
-@Composable
-fun rememberAppNavigation(): AppNavigation {
-    val lifecycle = remember { LifecycleRegistry() }
-    
-    DisposableEffect(Unit) {
-        lifecycle.resume()  // 激活生命周期
-        onDispose {
-            lifecycle.destroy()  // 清理生命周期
-        }
-    }
-    
-    return remember {
-        AppNavigation(DefaultComponentContext(lifecycle))
-    }
-}
-```
-
----
-
-### 3.3 `LaunchedEffect` - 协程副作用
-
-**作用**：在协程中执行副作用，适合异步操作。
-
-```kotlin
-@Composable
-fun MyScreen(userId: String) {
-    var data by remember { mutableStateOf<String?>(null) }
-    var loading by remember { mutableStateOf(false) }
-    
-    // 当 userId 变化时，重新执行
-    LaunchedEffect(userId) {
-        loading = true
-        try {
-            data = fetchUserData(userId)  // 异步获取数据
-        } finally {
-            loading = false
-        }
-    }
-    
-    if (loading) {
-        CircularProgressIndicator()
-    } else {
-        Text(data ?: "无数据")
-    }
-}
-```
-
-**特点**：
-- 在协程中执行
-- key 变化时自动取消旧协程，启动新协程
-- 组合结束时自动取消协程
-
-**适用场景**：
-- 网络请求
-- 数据库查询
-- 异步初始化
-- 动画控制
-
-**示例：一次性执行**
-
-```kotlin
-@Composable
-fun MyScreen() {
-    LaunchedEffect(Unit) {  // Unit 作为 key，只执行一次
-        // 初始化操作
-        initializeApp()
-    }
-}
-```
-
----
-
-### 3.4 `SideEffect` - 每次重组都执行
-
-**作用**：在每次重组时执行副作用（但 Compose 会优化）。
-
-```kotlin
-@Composable
-fun MyScreen(title: String) {
-    SideEffect {
-        // 每次重组都可能执行
-        document.title = title  // 更新网页标题
-        analytics.track("screen_view", title)
-    }
-    
-    Text(title)
-}
-```
-
-**特点**：
-- 每次重组都可能执行
-- 没有清理机制
-- Compose 会优化执行时机
-
-**适用场景**：
-- 更新外部状态（如网页标题）
-- 发送分析事件
-- 更新系统 UI（状态栏颜色）
-
-**注意**：谨慎使用，确保副作用是轻量级的。
-
----
-
-### 3.5 `rememberCoroutineScope` - 记住协程作用域
-
-**作用**：记住一个协程作用域，用于事件驱动的协程启动。
-
-```kotlin
-@Composable
-fun MyScreen() {
-    val scope = rememberCoroutineScope()
-    var data by remember { mutableStateOf<String?>(null) }
-    
-    Button(onClick = {
-        // 在点击事件中启动协程
-        scope.launch {
-            data = fetchData()
-        }
-    }) {
-        Text("加载数据")
-    }
-    
-    Text(data ?: "未加载")
-}
-```
-
-**特点**：
-- 首次组合时创建
-- 组合结束时自动取消所有协程
-- 适合事件驱动的异步操作
-
-**适用场景**：
-- 按钮点击后的异步操作
-- 用户交互触发的网络请求
-- 动画控制
-
----
-
-## 4. 副作用 API 对比表
-
-| API | 执行时机 | 清理机制 | 协程支持 | 适用场景 |
-|-----|---------|---------|---------|---------|
-| `remember` | 首次组合（key 变化时重新计算） | 自动（组合结束时） | ❌ | 记住值/对象 |
-| `DisposableEffect` | 组合时（key 变化时重新执行） | `onDispose` | ❌ | 订阅、监听器、资源 |
-| `LaunchedEffect` | key 变化时 | 自动取消协程 | ✅ | 异步操作、网络请求 |
-| `SideEffect` | 每次重组 | 无 | ❌ | 更新外部状态 |
-| `rememberCoroutineScope` | 首次组合 | 自动取消协程 | ✅ | 事件驱动的协程 |
-
----
-
-## 5. 副作用 API 的执行规则
-
-### 5.1 Key 参数的作用
-
-副作用 API 通常接受一个或多个 key 参数，用于控制何时重新执行：
-
-```kotlin
-// key = Unit，永远不变，只执行一次
-DisposableEffect(Unit) { ... }
-
-// key = userId，userId 变化时重新执行
+// 场景：userId 变化时重新搜索
 LaunchedEffect(userId) {
-    loadUserData(userId)
+    viewModel.search(userId) // 如果 userId 变了，上一次请求会被取消
 }
-
-// 多个 key
-LaunchedEffect(userId, filterType) {
-    loadFilteredData(userId, filterType)
-}
-
-// 没有 key（仅 SideEffect）
-SideEffect { ... }  // 每次重组都执行
 ```
 
-### 5.2 执行流程
-
-#### `DisposableEffect` 的执行流程：
-
-```
-首次组合：
-├─ 执行 lambda
-└─ 注册 onDispose 回调
-
-重组（key 不变）：
-└─ 不执行任何操作
-
-重组（key 变化）：
-├─ 执行旧的 onDispose
-└─ 执行新的 lambda，注册新的 onDispose
-
-离开组合：
-└─ 执行 onDispose
-```
-
-#### `LaunchedEffect` 的执行流程：
-
-```
-首次组合：
-└─ 启动协程
-
-重组（key 不变）：
-└─ 不执行任何操作
-
-重组（key 变化）：
-├─ 取消旧协程
-└─ 启动新协程
-
-离开组合：
-└─ 取消协程
-```
+### ❌ 避坑指南
+*   **不要** 在 `LaunchedEffect` 里写死循环而不挂起（会导致 UI 卡死）。
+*   **不要** 在 `LaunchedEffect(Unit)` 里监听 Flow（应该用 `collectAsState`）。
 
 ---
 
-## 6. 常见错误和正确做法
+## 2. 场景二：需要清理的副作用 (Cleanup Required)
 
-### 错误示例 1：直接在 Composable 中执行副作用
-
-```kotlin
-@Composable
-fun BadExample() {
-    var count by remember { mutableStateOf(0) }
-    
-    // ❌ 错误：每次重组都执行
-    val timer = Timer()
-    timer.start()
-    
-    // ❌ 错误：每次重组都订阅
-    eventBus.subscribe { ... }
-    
-    Button(onClick = { count++ }) {
-        Text("Count: $count")
-    }
-}
-```
-
-**问题**：
-- 每次重组都创建新的 Timer 和订阅
-- 旧的 Timer 和订阅没有被清理
-- 导致内存泄漏
-
-### 正确示例 1：使用 `DisposableEffect`
+### ✅ `DisposableEffect`
+**场景**：我想注册一个广播接收器、绑定一个 Service、或者开始一个需要手动停止的 Timer。
+**特点**：必须提供 `onDispose` 代码块，Compose 会在离开页面时自动调用它。
 
 ```kotlin
-@Composable
-fun GoodExample() {
-    var count by remember { mutableStateOf(0) }
-    
-    // ✅ 正确：使用 DisposableEffect
-    DisposableEffect(Unit) {
-        val timer = Timer()
-        timer.start()
-        onDispose {
-            timer.stop()  // 清理
-        }
-    }
-    
-    // ✅ 正确：使用 DisposableEffect
-    DisposableEffect(Unit) {
-        val subscription = eventBus.subscribe { ... }
-        onDispose {
-            subscription.unsubscribe()  // 清理
-        }
-    }
-    
-    Button(onClick = { count++ }) {
-        Text("Count: $count")
-    }
-}
-```
+DisposableEffect(lifecycleOwner) {
+    val observer = LifecycleEventObserver { _, event -> ... }
+    lifecycleOwner.lifecycle.addObserver(observer)
 
-### 错误示例 2：在 Composable 中直接启动协程
-
-```kotlin
-@Composable
-fun BadExample(userId: String) {
-    var data by remember { mutableStateOf<String?>(null) }
-    
-    // ❌ 错误：每次重组都启动协程
-    GlobalScope.launch {
-        data = fetchData(userId)
-    }
-    
-    Text(data ?: "加载中...")
-}
-```
-
-**问题**：
-- 每次重组都启动新协程
-- 旧协程没有被取消
-- 可能导致竞态条件
-
-### 正确示例 2：使用 `LaunchedEffect`
-
-```kotlin
-@Composable
-fun GoodExample(userId: String) {
-    var data by remember { mutableStateOf<String?>(null) }
-    
-    // ✅ 正确：使用 LaunchedEffect
-    LaunchedEffect(userId) {
-        data = fetchData(userId)  // userId 变化时自动重新执行
-    }
-    
-    Text(data ?: "加载中...")
-}
-```
-
----
-
-## 7. 实际应用场景
-
-### 场景 1：管理生命周期
-
-```kotlin
-@Composable
-fun rememberAppNavigation(): AppNavigation {
-    val lifecycle = remember { LifecycleRegistry() }
-    
-    DisposableEffect(Unit) {
-        lifecycle.resume()  // 激活生命周期
-        onDispose {
-            lifecycle.destroy()  // 清理生命周期
-        }
-    }
-    
-    return remember {
-        AppNavigation(DefaultComponentContext(lifecycle))
-    }
-}
-```
-
-### 场景 2：订阅数据流
-
-```kotlin
-@Composable
-fun DataScreen() {
-    var data by remember { mutableStateOf<Data?>(null) }
-    
-    DisposableEffect(Unit) {
-        val subscription = dataFlow.collect { newData ->
-            data = newData
-        }
-        onDispose {
-            subscription.cancel()
-        }
-    }
-    
-    Text(data?.toString() ?: "无数据")
-}
-```
-
-### 场景 3：网络请求
-
-```kotlin
-@Composable
-fun UserProfile(userId: String) {
-    var user by remember { mutableStateOf<User?>(null) }
-    var loading by remember { mutableStateOf(false) }
-    
-    LaunchedEffect(userId) {
-        loading = true
-        try {
-            user = api.getUser(userId)
-        } catch (e: Exception) {
-            // 处理错误
-        } finally {
-            loading = false
-        }
-    }
-    
-    if (loading) {
-        CircularProgressIndicator()
-    } else {
-        Text(user?.name ?: "用户不存在")
-    }
-}
-```
-
-### 场景 4：事件驱动的操作
-
-```kotlin
-@Composable
-fun SearchScreen() {
-    val scope = rememberCoroutineScope()
-    var query by remember { mutableStateOf("") }
-    var results by remember { mutableStateOf<List<Result>>(emptyList()) }
-    
-    Button(onClick = {
-        scope.launch {
-            results = searchApi.search(query)
-        }
-    }) {
-        Text("搜索")
-    }
-    
-    LazyColumn {
-        items(results) { result ->
-            Text(result.title)
-        }
-    }
-}
-```
-
----
-
-## 8. 最佳实践
-
-### 8.1 选择合适的 API
-
-- **需要清理资源** → 使用 `DisposableEffect`
-- **异步操作** → 使用 `LaunchedEffect`
-- **记住值** → 使用 `remember`
-- **事件驱动** → 使用 `rememberCoroutineScope`
-- **更新外部状态** → 使用 `SideEffect`（谨慎使用）
-
-### 8.2 正确使用 Key
-
-```kotlin
-// ✅ 好：明确指定 key
-LaunchedEffect(userId) { ... }
-
-// ❌ 不好：没有 key（每次都执行）
-LaunchedEffect { ... }
-
-// ✅ 好：一次性执行使用 Unit
-LaunchedEffect(Unit) { ... }
-```
-
-### 8.3 总是清理资源
-
-```kotlin
-// ✅ 好：总是提供清理逻辑
-DisposableEffect(Unit) {
-    val resource = acquireResource()
+    // 必须有！离开页面时清理
     onDispose {
-        releaseResource(resource)
+        lifecycleOwner.lifecycle.removeObserver(observer)
     }
-}
-
-// ❌ 不好：忘记清理
-DisposableEffect(Unit) {
-    acquireResource()  // 资源泄漏！
 }
 ```
 
-### 8.4 避免在副作用中直接修改状态
+### ❌ 避坑指南
+*   **不要** 忘记 `onDispose`，否则会内存泄漏。
+*   **不要** 在 `onDispose` 里做耗时操作。
+
+---
+
+## 3. 场景三：手动触发协程 (User Actions)
+
+### ✅ `rememberCoroutineScope`
+**场景**：我想在 `onClick` 点击事件里启动一个协程（比如弹出一个 Snackbar，或者保存数据）。
+**特点**：它给你一个 `Scope`，让你能在非 Composable 环境（如回调函数）里启动协程。
 
 ```kotlin
-// ❌ 不好：在副作用中直接修改状态
-LaunchedEffect(Unit) {
-    count++  // 可能导致无限重组
-}
+val scope = rememberCoroutineScope()
 
-// ✅ 好：使用回调或事件
-LaunchedEffect(Unit) {
-    eventBus.collect { event ->
-        onEvent(event)  // 通过回调处理
+Button(onClick = {
+    // 在点击回调里启动协程
+    scope.launch {
+        snackbarHostState.showSnackbar("保存成功")
+    }
+}) { Text("保存") }
+```
+
+### ❌ 避坑指南
+*   **不要** 把 `scope` 传给 ViewModel（ViewModel 有自己的 `viewModelScope`）。
+*   **不要** 用它来替代 `LaunchedEffect` 做页面初始化。
+
+---
+
+## 4. 场景四：状态转换与计算 (State Transformation)
+
+### ✅ `derivedStateOf`
+**场景**：我的状态 A 变化非常频繁（如滚动距离），但我只关心它是否超过某个阈值（状态 B）。
+**特点**：只有当计算结果真正变化时，才会触发下游重组。
+
+```kotlin
+val listState = rememberLazyListState()
+
+// 只有当 showButton 从 true 变 false (或反之) 时，才会触发重组
+val showButton by remember {
+    derivedStateOf { listState.firstVisibleItemIndex > 0 }
+}
+```
+
+### ✅ `produceState`
+**场景**：我想把一个非 Compose 的数据源（如 Socket 连接、定位回调）转为 State。
+**特点**：它是 `LaunchedEffect` + `State` 的语法糖。
+
+```kotlin
+@Composable
+fun loadNetworkImage(url: String): State<Result<Image>> {
+    // 创建一个 State，初始值为 Loading
+    return produceState(initialValue = Result.Loading, url) {
+        val image = imageLoader.load(url) // 挂起函数
+        value = Result.Success(image) // 更新 State
     }
 }
 ```
 
 ---
 
-## 9. 总结
+## 5. 总结对照表
 
-Compose 的副作用 API 提供了安全、可控的方式来执行副作用操作：
-
-1. **`remember`**：记住值，避免重复计算
-2. **`DisposableEffect`**：管理需要清理的资源
-3. **`LaunchedEffect`**：执行异步操作
-4. **`SideEffect`**：更新外部状态
-5. **`rememberCoroutineScope`**：事件驱动的协程
-
-**核心原则**：
-- 副作用应该在正确的时机执行
-- 副作用应该可以被清理
-- 副作用不应该导致无限重组
-
-通过正确使用这些 API，可以确保 Compose 应用的性能和稳定性。
+| API | 核心用途 | 关键字 | 自动取消/清理? |
+| :--- | :--- | :--- | :--- |
+| **LaunchedEffect** | 异步操作、网络请求 | `suspend` | ✅ (协程取消) |
+| **DisposableEffect** | 绑定/解绑、注册/注销 | `onDispose` | ✅ (执行 onDispose) |
+| **rememberCoroutineScope** | 点击事件、回调中启动协程 | `launch` | ✅ (页面销毁时取消) |
+| **derivedStateOf** | 过滤高频状态变化 | `State` | N/A |
+| **SideEffect** | 每次重组都执行 (极少用) | 非 Compose 状态同步 | ❌ |
 
 ---
 
-## 10. 参考资源
+## 6. ViewModel 生命周期补充说明
 
-- [Compose 官方文档 - 副作用](https://developer.android.com/jetpack/compose/side-effects)
-- [Decompose 文档 - 生命周期管理](https://arkivanov.github.io/Decompose/lifecycle/overview/)
+在 Compose 中使用 `koinViewModel()` 或 `viewModel()`：
+
+*   **创建**：当 Composable **首次** 进入组合（Composition）时创建。
+*   **存活**：只要该 Composable 所在的 **Navigation Route (BackStackEntry)** 还在堆栈中，ViewModel 就一直存活。
+*   **重组**：Composable 函数因为状态变化重新执行（Recomposition）时，**不会** 重新创建 ViewModel，而是返回同一个实例。
+*   **销毁**：当 Route 从堆栈中弹出（pop）时，ViewModel 触发 `onCleared()` 并销毁。
+
+**结论**：在 `HomeRoute` 参数中声明 `viewModel: VM = koinViewModel()` 是安全的，不会导致重复创建。
 
 
