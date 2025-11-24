@@ -6,10 +6,10 @@ import androidx.compose.runtime.Composable
  * 状态栏样式枚举
  */
 enum class StatusBarStyle {
-    /** 深色内容（白色文字和图标）- 适用于浅色背景 */
+    /** 深色图标和文字 - 适用于浅色背景 */
     DARK_CONTENT,
     
-    /** 浅色内容（黑色文字和图标）- 适用于深色背景 */
+    /** 浅色图标和文字 - 适用于深色背景 */
     LIGHT_CONTENT
 }
 

@@ -4,6 +4,11 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	
+	<!-- 启用基于 ViewController 的状态栏样式控制 -->
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<true/>
+	
 	<!-- 网络权限配置：允许应用访问网络 -->
 	<key>NSAppTransportSecurity</key>
 	<dict>
