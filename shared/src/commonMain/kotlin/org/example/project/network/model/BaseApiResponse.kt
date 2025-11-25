@@ -7,8 +7,9 @@ data class BaseApiResponse<T>(
     val code: Int,
     private val message: String?,
     val data: T? = null
-) {
-    fun isCodeSuccess(): Boolean {
+) : IBaseApiResponse {
+
+    override fun isCodeSuccess(): Boolean {
         return code in 200..299
     }
 
@@ -16,7 +17,7 @@ data class BaseApiResponse<T>(
         return isCodeSuccess() && data != null
     }
 
-    fun getMessage(): String {
+    override fun getMessage(): String {
         return message ?: ""
     }
 

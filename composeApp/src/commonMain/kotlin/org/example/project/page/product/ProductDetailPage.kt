@@ -19,10 +19,18 @@ import org.example.project.feature.product.ProductViewModel
 import org.example.project.network.model.ProductSummaryData
 import org.koin.compose.viewmodel.koinViewModel
 
+/**
+ * DetailScreen - 产品详情页
+ * 
+ * 最佳实践:根据 ID 加载数据,而非接收完整对象
+ * - 保持单一数据源
+ * - 确保数据为最新
+ * - 符合导航最佳实践
+ */
 @Composable
 fun DetailScreen(
-    viewModel: ProductViewModel = koinViewModel(),
     product: ProductSummaryData,
+    viewModel: ProductViewModel = koinViewModel(),
     modifier: Modifier = Modifier,
 ) {
     MaterialTheme {
@@ -34,17 +42,20 @@ fun DetailScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Text("详情内容", fontSize = 24.sp)
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // 直接使用对象，类型安全
-                Text("商品ID: ${product.id}", fontSize = 16.sp)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("商品名称: ${product.name}", fontSize = 16.sp)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("价格: ¥${product.price}", fontSize = 16.sp)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("描述: ${product.description}", fontSize = 16.sp)
+                if (product != null) {
+                    Text("详情内容", fontSize = 24.sp)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Text("商品ID: ${product.id}", fontSize = 16.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("商品名称: ${product.name}", fontSize = 16.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("价格: ¥${product.price}", fontSize = 16.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("描述: ${product.description}", fontSize = 16.sp)
+                } else {
+                    Text("产品不存在", fontSize = 16.sp)
+                }
             }
         }
     }

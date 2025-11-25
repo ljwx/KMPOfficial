@@ -41,7 +41,11 @@ fun AppSplashPage(modifier: Modifier = Modifier) {
             delay(1000)
             countdown--
         }
-        navController.navigate(RouterMainHome)
+        navController.navigate(RouterMainHome) {
+            popUpTo(0) {
+                inclusive = true
+            }
+        }
     }
 
     MaterialTheme {

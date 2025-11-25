@@ -2,17 +2,19 @@ package org.example.project.routes
 
 import kotlinx.serialization.Serializable
 
-@Serializable
-object RouterSplash
+interface BaseRouter
 
 @Serializable
-object RouterMainHome
+object RouterSplash : BaseRouter
 
 @Serializable
-object RouterPullRefresh
+object RouterMainHome : BaseRouter
 
 @Serializable
-data class RouterProductDetail(val productJson: String)
+object RouterPullRefresh : BaseRouter
 
 @Serializable
-data class Detail(val id: String, val fromSource: String)
+data class RouterProductDetail(val productJson: String) : BaseRouter
+
+@Serializable
+data class Detail(val id: String, val fromSource: String) : BaseRouter
