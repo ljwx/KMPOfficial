@@ -41,7 +41,7 @@ fun AppSplashPage(modifier: Modifier = Modifier) {
             delay(1000)
             countdown--
         }
-        navController.navigate(RouterMainPage) {
+        navController.navigate(RouterMainPage.route) {
             launchSingleTop = true
             popUpTo(navController.graph.startDestinationId) {
                 inclusive = true

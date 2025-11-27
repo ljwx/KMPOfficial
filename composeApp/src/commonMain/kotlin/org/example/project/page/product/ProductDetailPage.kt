@@ -8,14 +8,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.example.project.common.backhandler.BlockBackHandler
 import org.example.project.commoncomposable.CommonTopBarBack
 import org.example.project.feature.product.ProductViewModel
+import org.example.project.log.KSLog
 import org.example.project.network.model.ProductSummaryData
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -33,6 +38,9 @@ fun DetailScreen(
     viewModel: ProductViewModel = koinViewModel(),
     modifier: Modifier = Modifier,
 ) {
+    BlockBackHandler(enabled = true) {
+        KSLog.iRouter("点击了返回按钮")
+    }
     MaterialTheme {
         Scaffold(topBar = { CommonTopBarBack("详情页", null) }) {
             Column(

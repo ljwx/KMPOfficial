@@ -17,7 +17,7 @@ fun NavGraphBuilder.mainHomeGraph() {
 //            MainHomePage()
 //        }
 //    }
-    composable<RouterMainPage> {
+    composable(RouterMainPage.route) {
         MainHomePage()
     }
 

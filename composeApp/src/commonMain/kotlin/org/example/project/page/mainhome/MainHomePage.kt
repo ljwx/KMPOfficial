@@ -36,6 +36,7 @@ import org.example.project.page.mainhome.user.MainTabUserScreen
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import org.example.project.common.backhandler.HandleDoubleBackToExit
 import org.example.project.navigation.isCurrent
 import org.example.project.page.mainhome.home.MainTabHomeScreen
 import org.example.project.statusbar.StatusBarConfig
@@ -142,4 +143,6 @@ fun MainHomePage() {
             }
         }
     }
+    // 双击返回退出 App（仅 Android）
+    HandleDoubleBackToExit()
 }
