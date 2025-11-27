@@ -117,21 +117,19 @@ fun MainHomePage() {
                         }
                     }
                 ) { innerPadding ->
-                    val contentModifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-
                     NavHost(
                         navController = tabNavController,
                         startDestination = tabHome,
-                        modifier = contentModifier,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding),
                         enterTransition = { fadeIn(tween(250)) },
                         exitTransition = { fadeOut(tween(250)) },
                         popEnterTransition = { fadeIn(tween(250)) },
                         popExitTransition = { fadeOut(tween(250)) }
                     ) {
                         composable(tabHome) {
-                            MainTabHomeScreen(modifier = contentModifier)
+                            MainTabHomeScreen()
                         }
                         composable(tabCreate) {
                             MainTabCreateScreen()

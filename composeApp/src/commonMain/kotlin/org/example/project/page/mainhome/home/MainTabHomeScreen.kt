@@ -3,6 +3,7 @@ package org.example.project.page.mainhome.home
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -76,13 +77,9 @@ fun MainTabHomeScreen(
         }
     }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        topBar = { CommonTopBar(title = "测试") },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { innerPadding ->
+    Box(modifier = modifier) {
         CommonPageContainer(
-            modifier = Modifier.padding(innerPadding), // 👈 显示区域由 Scaffold 的 innerPadding 定义
+            modifier = Modifier.fillMaxSize(), // 👈 显示区域由 Scaffold 的 innerPadding 定义
             viewModel = viewModel,
             config = PageContainerConfig.AlsoPull,
             router = RouterMainPage
@@ -142,8 +139,7 @@ private fun HomeScreen(
             item {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                        .fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Image(
