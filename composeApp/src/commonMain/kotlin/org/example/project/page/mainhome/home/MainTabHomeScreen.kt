@@ -1,7 +1,6 @@
-package org.example.project.page.home
+package org.example.project.page.mainhome.home
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -29,7 +28,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinproject.composeapp.generated.resources.Res
@@ -42,9 +40,9 @@ import org.example.project.commoncomposable.PageContainerConfig
 import org.example.project.feature.product.ProductViewModel
 import org.example.project.navigation.LocalNavController
 import org.example.project.network.model.ProductSummaryData
-import org.example.project.routes.RouterMainHome
-import org.example.project.routes.RouterProductDetail
-import org.example.project.routes.RouterPullRefresh
+import org.example.project.navigation.routes.RouterMainPage
+import org.example.project.navigation.routes.RouterProductDetail
+import org.example.project.navigation.routes.RouterPullRefresh
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -59,7 +57,7 @@ sealed interface HomeEffect {
 }
 
 @Composable
-fun MainHomePage(
+fun MainTabHomeScreen(
     modifier: Modifier = Modifier,
     viewModel: ProductViewModel = koinViewModel(),
 ) {
@@ -79,7 +77,7 @@ fun MainHomePage(
     }
 
     Scaffold(
-        modifier = modifier,
+        modifier = modifier.fillMaxSize(),
         topBar = { CommonTopBar(title = "测试") },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
@@ -87,7 +85,7 @@ fun MainHomePage(
             modifier = Modifier.padding(innerPadding), // 👈 显示区域由 Scaffold 的 innerPadding 定义
             viewModel = viewModel,
             config = PageContainerConfig.AlsoPull,
-            router = RouterMainHome
+            router = RouterMainPage
         ) {
             HomeScreen(
                 products = products,

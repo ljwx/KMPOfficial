@@ -9,11 +9,11 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import org.example.project.navigation.LocalNavController
-import org.example.project.routes.RouterSplash
+import org.example.project.navigation.routes.RouterSplash
 import org.example.project.theme.AppTheme
-import org.example.project.routes.mainHomeGraph
-import org.example.project.routes.splashGraph
-import org.example.project.routes.testGraph
+import org.example.project.navigation.navgraph.mainHomeGraph
+import org.example.project.navigation.navgraph.splashGraph
+import org.example.project.navigation.navgraph.testGraph
 import org.example.project.statusbar.StatusBarConfig
 import org.example.project.statusbar.StatusBarStyle
 
@@ -31,7 +31,6 @@ fun AppRootPage(
             NavHost(
                 navController = navController,
                 startDestination = RouterSplash,
-                // 全局 Android 风格动画
                 enterTransition = { slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(300)) },
                 exitTransition = { slideOutHorizontally(targetOffsetX = { -it }, animationSpec = tween(300)) },
                 popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }, animationSpec = tween(300)) },

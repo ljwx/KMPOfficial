@@ -15,7 +15,7 @@ interface IBaseViewModel {
     fun <T> commonHandleRequestResult(
         requestResult: Result<BaseApiResponse<T>>,
         isMultiStateContent: Boolean,
-        onFail: ((t: Throwable?) -> Unit)? = null,
+        onInterceptFail: ((t: Throwable?) -> Boolean)? = null,
         onSuccess: (value: T?) -> Unit
     )
 

@@ -20,7 +20,7 @@ import org.example.project.common.BaseViewModel
 import org.example.project.multiplestate.DefaultError
 import org.example.project.multiplestate.MultiStateLayout
 import org.example.project.multiplestate.MultiStateLayoutState
-import org.example.project.routes.BaseRouter
+import org.example.project.navigation.routes.BaseRouter
 
 sealed interface PageContainerEvent {
     data object OnPullRefresh : PageContainerEvent

@@ -10,7 +10,7 @@ import kotlinx.coroutines.launch
 import org.example.project.common.BaseViewModel
 import org.example.project.log.KSLog
 import org.example.project.network.model.ProductSummaryData
-import org.example.project.page.home.HomeEffect
+import org.example.project.page.mainhome.home.HomeEffect
 
 class ProductViewModel(private val repository: IProductRepository) : BaseViewModel() {
 

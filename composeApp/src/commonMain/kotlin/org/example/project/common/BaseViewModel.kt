@@ -43,7 +43,7 @@ abstract class BaseViewModel : ViewModel(), IBaseViewModel {
     override fun <T> commonHandleRequestResult(
         requestResult: Result<BaseApiResponse<T>>,
         isMultiStateContent: Boolean,
-        onFail: ((t: Throwable?) -> Unit)?,
+        onInterceptFail: ((t: Throwable?) -> Boolean)?,
         onSuccess: (value: T?) -> Unit
     ) {
         requestResult.onSuccess {
@@ -54,22 +54,20 @@ abstract class BaseViewModel : ViewModel(), IBaseViewModel {
                 }
             } else {
                 val exception = ResponseFailException(it)
-                handleRequestFail(isMultiStateContent, exception, onFail)
+                handleRequestFail(isMultiStateContent, exception, onInterceptFail)
             }
         }.onFailure {
-            handleRequestFail(isMultiStateContent, it, onFail)
+            handleRequestFail(isMultiStateContent, it, onInterceptFail)
         }
     }
 
     private fun handleRequestFail(
         isMultiStateContent: Boolean,
         throwable: Throwable?,
-        onFail: ((t: Throwable?) -> Unit)?
+        onInterceptFail: ((t: Throwable?) -> Boolean)?
     ) {
-        if (onFail == null) {
+        if (onInterceptFail?.invoke(throwable) != true) {
             onCommonRequestFail(throwable, isMultiStateContent)
-        } else {
-            onFail(throwable)
         }
     }
 

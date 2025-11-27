@@ -24,7 +24,7 @@ import kotlinx.coroutines.delay
 import kotlinproject.composeapp.generated.resources.Res
 import kotlinproject.composeapp.generated.resources.pickcat_login_bg
 import org.example.project.navigation.LocalNavController
-import org.example.project.routes.RouterMainHome
+import org.example.project.navigation.routes.RouterMainPage
 import org.example.project.statusbar.StatusBarConfig
 import org.example.project.statusbar.StatusBarStyle
 import org.jetbrains.compose.resources.painterResource
@@ -41,8 +41,9 @@ fun AppSplashPage(modifier: Modifier = Modifier) {
             delay(1000)
             countdown--
         }
-        navController.navigate(RouterMainHome) {
-            popUpTo(0) {
+        navController.navigate(RouterMainPage) {
+            launchSingleTop = true
+            popUpTo(navController.graph.startDestinationId) {
                 inclusive = true
             }
         }
