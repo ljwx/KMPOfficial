@@ -12,6 +12,7 @@ import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import org.example.project.common.paging.createCommonPager
+import org.example.project.commoncomposable.LazyColumnLoadMore.LazyColumLoadMore
 import org.example.project.log.KSLog
 
 /**
@@ -38,7 +39,7 @@ fun SimplePagingScreen(
             }
         }
     }
-    
+
     val pagingItems = pagingDataFlow.collectAsLazyPagingItems()
 
     SimplePagingList(
@@ -52,80 +53,88 @@ fun SimplePagingList(
     pagingItems: LazyPagingItems<TestPagingItem>,
     modifier: Modifier = Modifier
 ) {
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
+    LazyColumLoadMore(
+        modifier,
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        pagingItems
     ) {
-        // 显示加载状态
-        when (pagingItems.loadState.refresh) {
-            is LoadState.Loading -> {
-                item {
-                    Box(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-            }
-
-            is LoadState.Error -> {
-                val error = (pagingItems.loadState.refresh as LoadState.Error).error
-                item {
-                    ErrorItem(
-                        message = error.message ?: "Unknown error",
-                        onRetry = { pagingItems.retry() }
-                    )
-                }
-            }
-
-            else -> Unit
-        }
-
-        // 显示数据列表
-        items(
-            count = pagingItems.itemCount,
-            key = { index -> 
-                val item = pagingItems.itemSnapshotList.getOrNull(index)
-                item?.id ?: index 
-            }
-        ) { index ->
-            val item = pagingItems[index]
-            if (item != null) {
-                ItemCard(item = item)
-            } else {
-                // 占位符
-                ItemPlaceholder()
-            }
-        }
-
-        // 显示加载更多状态
-        when (pagingItems.loadState.append) {
-            is LoadState.Loading -> {
-                item {
-                    Box(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-            }
-
-            is LoadState.Error -> {
-                val error = (pagingItems.loadState.append as LoadState.Error).error
-                item {
-                    ErrorItem(
-                        message = error.message ?: "Unknown error",
-                        onRetry = { pagingItems.retry() }
-                    )
-                }
-            }
-
-            else -> Unit
-        }
+        ItemCard(item = it)
     }
+//    LazyColumn(
+//        modifier = modifier.fillMaxSize(),
+//        contentPadding = PaddingValues(16.dp),
+//        verticalArrangement = Arrangement.spacedBy(8.dp)
+//    ) {
+//        // 显示加载状态
+//        when (pagingItems.loadState.refresh) {
+//            is LoadState.Loading -> {
+//                item {
+//                    Box(
+//                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+//                        contentAlignment = Alignment.Center
+//                    ) {
+//                        CircularProgressIndicator()
+//                    }
+//                }
+//            }
+//
+//            is LoadState.Error -> {
+//                val error = (pagingItems.loadState.refresh as LoadState.Error).error
+//                item {
+//                    ErrorItem(
+//                        message = error.message ?: "Unknown error",
+//                        onRetry = { pagingItems.retry() }
+//                    )
+//                }
+//            }
+//
+//            else -> Unit
+//        }
+//
+//        // 显示数据列表
+//        items(
+//            count = pagingItems.itemCount,
+//            key = { index ->
+//                val item = pagingItems.itemSnapshotList.getOrNull(index)
+//                item?.id ?: index
+//            }
+//        ) { index ->
+//            val item = pagingItems[index]
+//            if (item != null) {
+//                ItemCard(item = item)
+//            } else {
+//                // 占位符
+//                ItemPlaceholder()
+//            }
+//        }
+//
+//        // 显示加载更多状态
+//        when (pagingItems.loadState.append) {
+//            is LoadState.Loading -> {
+//                item {
+//                    Box(
+//                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+//                        contentAlignment = Alignment.Center
+//                    ) {
+//                        CircularProgressIndicator()
+//                    }
+//                }
+//            }
+//
+//            is LoadState.Error -> {
+//                val error = (pagingItems.loadState.append as LoadState.Error).error
+//                item {
+//                    ErrorItem(
+//                        message = error.message ?: "Unknown error",
+//                        onRetry = { pagingItems.retry() }
+//                    )
+//                }
+//            }
+//
+//            else -> Unit
+//        }
+//    }
 }
 
 @Composable
@@ -169,35 +178,6 @@ private fun ItemPlaceholder(
             CircularProgressIndicator(
                 modifier = Modifier.size(24.dp).align(Alignment.Center)
             )
-        }
-    }
-}
-
-@Composable
-private fun ErrorItem(
-    message: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Error: $message",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onErrorContainer
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(onClick = onRetry) {
-                Text("Retry")
-            }
         }
     }
 }

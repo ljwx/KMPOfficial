@@ -6,4 +6,10 @@ data class TestPagingItem(
     val id: Int,
     val title: String,
     val description: String
-) : BasePagingItem
+) : BasePagingItem {
+
+    override fun getItemUuid(): String {
+        return toString()
+    }
+
+}
