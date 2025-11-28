@@ -96,6 +96,9 @@ kotlin {
             // Project Modules
             api(projects.shared)
             api(projects.kmplog)
+
+            implementation(libs.paging.common)
+            implementation(libs.paging.compose)
         }
 
         // 2. Android Main

@@ -32,4 +32,4 @@ object RouterPullRefresh : BaseRouter("")
 data class RouterProductDetail(val productJson: String) : BaseRouter(RouteProductDetail)
 
 @Serializable
-data class Detail(val id: String, val fromSource: String) : BaseRouter("")
+object RouterPaging : BaseRouter("paging_test")
