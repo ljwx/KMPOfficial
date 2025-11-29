@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 
 private class CommonPagingSource<Item : BasePagingItem>(
     private val startIndex: Int,
-    private val loadData: (index: Int, pageSize: Int) -> List<Item>
+    private val loadData: suspend (index: Int, pageSize: Int) -> List<Item>
 ) :
     PagingSource<Int, Item>() {
 
@@ -42,7 +42,7 @@ private class CommonPagingSource<Item : BasePagingItem>(
 fun <Item : BasePagingItem> createCommonPager(
     startIndex: Int = 0,
     pageSize: Int = 25,
-    loadData: (index: Int, pageSize: Int) -> List<Item>
+    loadData: suspend (index: Int, pageSize: Int) -> List<Item>
 ): Flow<PagingData<Item>> {
     return Pager(
         config = PagingConfig(

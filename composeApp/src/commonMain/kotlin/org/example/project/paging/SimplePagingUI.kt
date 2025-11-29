@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import kotlinx.coroutines.delay
 import org.example.project.common.paging.createCommonPager
 import org.example.project.commoncomposable.LazyColumnLoadMore.LazyColumLoadMore
 import org.example.project.log.KSLog
@@ -28,6 +29,7 @@ fun SimplePagingScreen(
     val pagingDataFlow = remember {
         createCommonPager { pageIndex, pageSize ->
             KSLog.iNet("加载第 $pageIndex 页, pageSize: $pageSize")
+            delay(2500)
             // 生成该页的数据
             List(pageSize) { itemIndex ->
                 val itemId = pageIndex * pageSize + itemIndex
@@ -54,10 +56,8 @@ fun SimplePagingList(
     modifier: Modifier = Modifier
 ) {
     LazyColumLoadMore(
-        modifier,
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        pagingItems
+        modifier = modifier,
+        pagingItems = pagingItems
     ) {
         ItemCard(item = it)
     }

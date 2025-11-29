@@ -28,8 +28,8 @@ import org.example.project.common.paging.BasePagingItem
 @Composable
 fun <T : BasePagingItem> LazyColumLoadMore(
     modifier: Modifier,
-    contentPadding: PaddingValues,
-    verticalArrangement: Arrangement.Vertical,
+    contentPadding: PaddingValues = PaddingValues(16.dp),
+    verticalArrangement: Arrangement.Vertical = Arrangement.spacedBy(8.dp),
     pagingItems: LazyPagingItems<T>,
     itemBox: @Composable (item: T) -> Unit
 ) {
