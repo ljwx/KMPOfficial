@@ -82,7 +82,7 @@ object DatabaseFactory {
         val driverClassNameValue = "com.mysql.cj.jdbc.Driver"
         // MySQL 连接 URL
         val jdbcURL = System.getenv("JDBC_URL") 
-            ?: "jdbc:mysql://localhost:3306/jdcr?useSSL=false&serverTimezone=Asia/Shanghai"
+            ?: "jdbc:mysql://localhost:3306/jdcr?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true"
         val user = System.getenv("DB_USER") ?: "root"
         // 生产环境必须通过环境变量 DB_PASSWORD 设置密码，不要硬编码
         val password = System.getenv("DB_PASSWORD") ?: "Lj13641435978"
