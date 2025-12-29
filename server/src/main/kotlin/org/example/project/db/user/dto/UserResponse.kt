@@ -1,4 +1,4 @@
-package org.example.project.db.dto
+package org.example.project.db.user.dto
 
 import kotlinx.serialization.Serializable
 
@@ -17,7 +17,7 @@ data class UserResponse(
     val status: String,
     val role: String,
     val createdAt: String,
-    val updatedAt: String,
+    val updatedAt: String?,
     val lastLoginAt: String? = null
 )
 

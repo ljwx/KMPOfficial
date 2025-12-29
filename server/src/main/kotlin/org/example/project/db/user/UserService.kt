@@ -1,12 +1,11 @@
-package org.example.project.db
+package org.example.project.db.user
 
 import org.example.project.db.DatabaseFactory.dbQuery
-import org.example.project.db.dto.CreateUserRequest
-import org.example.project.db.dto.UserResponse
+import org.example.project.db.user.dto.CreateUserRequest
+import org.example.project.db.user.dto.UserResponse
 import org.example.project.util.DateTimeUtils
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import java.time.LocalDateTime
 
 /**
  * 用户服务类，封装了与用户相关的数据库操作。
@@ -123,7 +122,8 @@ class UserService {
         val now = DateTimeUtils.nowUTC()
         Users.update({ Users.id eq id }) {
             user.email?.let { email -> it[Users.email] = email }
-            user.password.takeIf { it.isNotBlank() }?.let { password -> it[Users.password] = password }
+            user.password.takeIf { it.isNotBlank() }
+                ?.let { password -> it[Users.password] = password }
             user.nickname?.let { nickname -> it[Users.nickname] = nickname }
             user.avatar?.let { avatar -> it[Users.avatar] = avatar }
             user.phone?.let { phone -> it[Users.phone] = phone }
@@ -171,7 +171,7 @@ class UserService {
         val createdAt = row[Users.createdAt]
         val updatedAt = row[Users.updatedAt]
         val lastLoginAt = row[Users.lastLoginAt]
-        
+
         return User(
             id = row[Users.id],
             username = row[Users.username],
@@ -183,7 +183,7 @@ class UserService {
             status = row[Users.status],
             role = row[Users.role],
             createdAt = DateTimeUtils.toISOString(createdAt),
-            updatedAt = DateTimeUtils.toISOString(updatedAt),
+            updatedAt = if (updatedAt == null) null else DateTimeUtils.toISOString(updatedAt),
             lastLoginAt = lastLoginAt?.let { DateTimeUtils.toISOString(it) }
         )
     }
