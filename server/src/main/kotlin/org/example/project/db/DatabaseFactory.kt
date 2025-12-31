@@ -23,15 +23,24 @@ object DatabaseFactory {
      */
     private fun isTableStructureCompatible(metaData: DatabaseMetaData, tableName: String): Boolean {
         // 定义当前表结构的关键列（必须存在的列）
-        val requiredColumns = mapOf(
-            "id" to "INT",           // 主键
-            "username" to "VARCHAR", // 用户名
-            "password" to "VARCHAR", // 密码
-            "status" to "VARCHAR",   // 状态
-            "role" to "VARCHAR",     // 角色
-            "created_at" to "DATETIME", // 创建时间
-            "updated_at" to "DATETIME"  // 更新时间
-        )
+        val requiredColumns = when (tableName) {
+            "users" -> mapOf(
+                "id" to "INT",           // 主键
+                "username" to "VARCHAR", // 用户名
+                "password" to "VARCHAR", // 密码
+                "status" to "VARCHAR",   // 状态
+                "role" to "VARCHAR",     // 角色
+                "created_at" to "DATETIME", // 创建时间
+                "updated_at" to "DATETIME"  // 更新时间
+            )
+            "app_run" -> mapOf(
+                "id" to "BIGINT",           // 主键
+                "app_name" to "VARCHAR",    // 应用名称
+                "run_date" to "DATE",       // 运行日期
+                "startup_time" to "DATETIME" // 启动时间
+            )
+            else -> emptyMap()
+        }
         
         // 获取表中的所有列
         val columns = metaData.getColumns(null, null, tableName, null)
@@ -120,60 +129,70 @@ object DatabaseFactory {
             val directConnection = dataSource.connection
             try {
                 val metaData = directConnection.metaData
-                val tables = metaData.getTables(null, null, "users", null)
-                val tableExists = tables.next()
                 
-                if (tableExists) {
-                    // 表存在，检查是否需要删除重建
-                    if (dropExistingTable) {
-                        // 强制删除模式（开发环境）
-                        logger.info("强制删除模式：删除旧表 users")
-                        directConnection.createStatement().executeUpdate("DROP TABLE users")
-                        SchemaUtils.create(Users)
-                        logger.info("已创建新表 users")
-                    } else {
-                        // 生产环境模式：只进行增量更新，不删除表
-                        // 这是最佳实践，避免数据丢失
-                        val isCompatible = isTableStructureCompatible(metaData, "users")
-                        
-                        if (isCompatible) {
-                            // 表结构兼容，只添加缺失的列（增量更新）
-                            logger.info("表结构兼容，使用增量更新模式")
-                            SchemaUtils.createMissingTablesAndColumns(Users)
-                            logger.info("已完成表结构更新")
+                // 同时检查和初始化 users 和 app_run 表
+                val tablesToCheck = listOf(
+                    "users" to Users,
+                    "app_run" to AppRunTable
+                )
+                
+                for ((tableName, table) in tablesToCheck) {
+                    logger.info("检查表：$tableName")
+                    val tables = metaData.getTables(null, null, tableName, null)
+                    val tableExists = tables.next()
+                    
+                    if (tableExists) {
+                        // 表存在，检查是否需要删除重建
+                        if (dropExistingTable) {
+                            // 强制删除模式（开发环境）
+                            logger.info("强制删除模式：删除旧表 $tableName")
+                            directConnection.createStatement().executeUpdate("DROP TABLE $tableName")
+                            SchemaUtils.create(table)
+                            logger.info("已创建新表 $tableName")
                         } else {
-                            // 表结构不兼容
-                            // 生产环境最佳实践：不自动删除表，而是抛出异常要求使用迁移工具
-                            val errorMessage = """
-                                |表结构不兼容，但为了数据安全，不会自动删除表。
-                                |
-                                |请使用以下方式之一进行迁移：
-                                |1. 使用数据库迁移工具（推荐）：Flyway 或 Liquibase
-                                |2. 手动迁移：备份数据 -> 删除表 -> 创建新表 -> 恢复数据
-                                |3. 开发环境：设置 dropExistingTable = true（仅限开发环境）
-                                |
-                                |当前表缺少的必需列或类型不匹配，请检查日志了解详情。
-                            """.trimMargin()
+                            // 生产环境模式：只进行增量更新，不删除表
+                            // 这是最佳实践，避免数据丢失
+                            val isCompatible = isTableStructureCompatible(metaData, tableName)
                             
-                            logger.warn("表结构不兼容: $errorMessage")
-                            // 尝试使用增量更新，可能会失败，但不删除表
-                            try {
-                                SchemaUtils.createMissingTablesAndColumns(Users)
-                                logger.warn("已尝试增量更新，但可能不完整，请检查表结构")
-                            } catch (e: Exception) {
-                                logger.error("增量更新失败", e)
-                                throw IllegalStateException(
-                                    "表结构不兼容且无法自动修复。$errorMessage",
-                                    e
-                                )
+                            if (isCompatible) {
+                                // 表结构兼容，只添加缺失的列（增量更新）
+                                logger.info("表 $tableName 结构兼容，使用增量更新模式")
+                                SchemaUtils.createMissingTablesAndColumns(table)
+                                logger.info("已完成表 $tableName 结构更新")
+                            } else {
+                                // 表结构不兼容
+                                // 生产环境最佳实践：不自动删除表，而是抛出异常要求使用迁移工具
+                                val errorMessage = """
+                                    |表 $tableName 结构不兼容，但为了数据安全，不会自动删除表。
+                                    |
+                                    |请使用以下方式之一进行迁移：
+                                    |1. 使用数据库迁移工具（推荐）：Flyway 或 Liquibase
+                                    |2. 手动迁移：备份数据 -> 删除表 -> 创建新表 -> 恢复数据
+                                    |3. 开发环境：设置 dropExistingTable = true（仅限开发环境）
+                                    |
+                                    |当前表缺少的必需列或类型不匹配，请检查日志了解详情。
+                                """.trimMargin()
+                                
+                                logger.warn("表结构不兼容: $errorMessage")
+                                // 尝试使用增量更新，可能会失败，但不删除表
+                                try {
+                                    SchemaUtils.createMissingTablesAndColumns(table)
+                                    logger.warn("已尝试增量更新表 $tableName，但可能不完整，请检查表结构")
+                                } catch (e: Exception) {
+                                    logger.error("增量更新表 $tableName 失败", e)
+                                    throw IllegalStateException(
+                                        "表结构不兼容且无法自动修复。$errorMessage",
+                                        e
+                                    )
+                                }
                             }
                         }
+                    } else {
+                        // 表不存在，直接创建
+                        logger.info("表 $tableName 不存在，创建新表")
+                        SchemaUtils.create(table)
+                        logger.info("已创建新表 $tableName")
                     }
-                } else {
-                    // 表不存在，直接创建
-                    logger.info("表 users 不存在，创建新表")
-                    SchemaUtils.create(Users)
-                    logger.info("已创建新表 users")
                 }
             } catch (e: Exception) {
                 logger.error("数据库初始化时出现异常", e)
