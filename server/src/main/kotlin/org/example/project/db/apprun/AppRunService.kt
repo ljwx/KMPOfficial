@@ -1,24 +1,42 @@
 package org.example.project.db.apprun
 
 import org.example.project.db.DatabaseFactory.dbQuery
+import org.example.project.db.apprun.dto.AppRunInfoResponse
 import org.jetbrains.exposed.sql.*
+import java.time.LocalDate
 
 class AppRunService {
 
-    suspend fun getAppRunInfo(appName: String): List<AppRunInfo> {
-        return AppRunTable.selectAll()
-            .where { AppRunTable.appName eq appName }
-            .map { row ->
-                resultRowToInfo(row)
-            }
+    suspend fun getAppRunInfo(appName: String, date: LocalDate): List<AppRunInfo> {
+        return dbQuery {
+            AppRunTable.selectAll()
+                .where { AppRunTable.appName eq appName and (AppRunTable.runDate eq date) }
+                .map {
+                    resultRowToInfo(it)
+                }
+        }
     }
 
-    suspend fun appLunch(appName: String) {
+    suspend fun appRun(appName: String) {
         dbQuery {
             AppRunTable.insert {
                 it[AppRunTable.appName] = appName
             } get AppRunTable.id
         }
+    }
+
+    fun toInfoResponse(data: AppRunInfo?): AppRunInfoResponse? {
+        if (data == null) {
+            return null
+        }
+        return AppRunInfoResponse(
+            appName = data.appName,
+            runDate = data.runDate.toString(),
+            startBalance = data.startBalance,
+            endBalance = data.endBalance,
+            checkIn = data.checkIn ?: false,
+            mainTaskCount = data.mainTaskCount ?: 0
+        )
     }
 
     private fun resultRowToInfo(row: ResultRow): AppRunInfo {

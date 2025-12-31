@@ -15,12 +15,16 @@ import org.example.project.config.ConfigRateLimit
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import org.example.project.db.DatabaseFactory
-import org.example.project.db.UserService
-import org.example.project.routes.appRun
+import org.example.project.db.apprun.AppRunService
+import org.example.project.db.user.UserService
+import org.example.project.routes.appRunInfo
 import org.example.project.routes.productRoutes
 import org.example.project.routes.userRoutes
 import org.example.project.util.configureErrorHandling
 import org.slf4j.event.Level
+
+// 服务器配置常量
+const val SERVER_PORT = 8080
 
 fun main() {
     // 时区处理策略：
@@ -53,6 +57,7 @@ fun Application.module() {
     DatabaseFactory.init(dropExistingTable = false)
     
     val userService = UserService()
+    val appRunService = AppRunService()
 
     // 配置 ContentNegotiation 和 JSON 序列化
     install(ContentNegotiation) {
@@ -98,7 +103,7 @@ fun Application.module() {
                 // 注册各个功能模块的路由
                 productRoutes()
                 userRoutes(userService)
-                appRun()
+                appRunInfo(appRunService)
             }
         }
     }

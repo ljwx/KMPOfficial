@@ -3,6 +3,7 @@ package org.example.project.db
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.Dispatchers
+import org.example.project.db.apprun.AppRunTable
 import org.example.project.db.user.Users
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -178,7 +179,7 @@ object DatabaseFactory {
                 logger.error("数据库初始化时出现异常", e)
                 // 尝试使用 Exposed 的方式创建表
                 try {
-                    SchemaUtils.createMissingTablesAndColumns(Users)
+                    SchemaUtils.createMissingTablesAndColumns(Users, AppRunTable)
                     logger.info("已使用 Exposed 创建/更新表结构")
                 } catch (e2: Exception) {
                     logger.error("创建表失败", e2)

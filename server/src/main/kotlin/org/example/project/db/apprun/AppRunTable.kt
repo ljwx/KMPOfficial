@@ -17,6 +17,8 @@ object AppRunTable : Table("app_run") {
     val mainTaskCount = integer("main_task_count").nullable()
     val branchTaskCount = integer("branch_task_count").nullable()
     val runDuration = integer("run_duration").nullable()
+    
+    override val primaryKey = PrimaryKey(id)
 }
 
 data class AppRunInfo(
